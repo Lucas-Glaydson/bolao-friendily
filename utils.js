@@ -76,12 +76,14 @@ export function pontosBadge(pts) {
 
 /**
  * Infere o status de um jogo: "finished" | "live" | "scheduled".
+ * Usa game._utcMs (timestamp UTC correto) se disponível; caso contrário,
+ * cai no parseGameDate (pode ter desvio de fuso se _enrichGamesUtcMs não rodou).
  */
 export function getStatus(game, now = new Date()) {
   if (game.finished === "TRUE") return "finished";
-  const gameDate = parseGameDate(game.local_date);
-  if (!gameDate) return "scheduled";
-  const diff = now - gameDate; // ms
+  const ts = game._utcMs ?? parseGameDate(game.local_date)?.getTime() ?? null;
+  if (ts === null) return "scheduled";
+  const diff = now.getTime() - ts; // ms
   if (diff >= 0 && diff < 130 * 60 * 1000) return "live";      // até ~2h10
   if (diff >= 130 * 60 * 1000) return "finished";               // presumidamente finalizado
   return "scheduled";

@@ -377,10 +377,22 @@ function _timeToBrt(timeStr, stadiumId, stadiumsMap) {
   return `${String((hh + offset) % 24).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
-function _gameDateBrt(game) { return parseGameDate(game.local_date); }
+function _gameDateBrt(game) {
+  if (game._utcMs != null) return new Date(game._utcMs);
+  return parseGameDate(game.local_date);
+}
 
 function _gameDayKey(game) {
-  const d = _gameDateBrt(game);
+  if (game._utcMs != null) {
+    // Subtrai 3h para obter meia-noite BRT (UTC-3) e usa UTC para extrair a data
+    const brtMs = game._utcMs - 3 * 60 * 60 * 1000;
+    const d = new Date(brtMs);
+    const y = d.getUTCFullYear();
+    const mo = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(d.getUTCDate()).padStart(2, "0");
+    return `${y}-${mo}-${day}`;
+  }
+  const d = parseGameDate(game.local_date);
   if (!d) return "0000-00-00";
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");

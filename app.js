@@ -103,6 +103,7 @@ async function _loadAPIData(skipCache = false) {
     state.games = games;
     state.teamsMap = teamsMap;
     state.stadiumsMap = stadiumsMap;
+    _enrichGamesUtcMs(state.games);
 
     elStatus.textContent = `✅ ${new Date().toLocaleTimeString("pt-BR")}`;
     _renderAll();
@@ -177,6 +178,23 @@ function _stadiumToBrtOffset(stadiumId) {
   return 0;
 }
 
+/**
+ * Anexa game._utcMs a cada jogo: timestamp UTC correto da partida.
+ * Converte o horário local do estádio (local_date) para UTC usando o offset de cada sede.
+ * Formula: UTC = local + (3 + brtOffset) horas  (porque BRT = UTC-3)
+ * Exemplo: 13:00 EDT (brtOffset=1) → UTC = 13 + 4 = 17:00 UTC ✓
+ */
+function _enrichGamesUtcMs(games) {
+  for (const g of games) {
+    const m = String(g.local_date ?? "").match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})$/);
+    if (!m) continue;
+    const [, mo, day, y, h, mi] = m;
+    const brtOffset = _stadiumToBrtOffset(g.stadium_id);
+    // Date.UTC lida corretamente com overflow de horas (ex: 25h → dia seguinte)
+    g._utcMs = Date.UTC(+y, +mo - 1, +day, +h + 3 + brtOffset, +mi);
+  }
+}
+
 function _renderToday(allGames) {
   const el = document.getElementById("today-section");
   if (!el) return;
@@ -185,9 +203,9 @@ function _renderToday(allGames) {
   const todayStr = now.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
   const todayGames = allGames.filter((g) => {
-    const d = parseGameDate(g.local_date);
-    if (!d) return false;
-    return d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) === todayStr;
+    const ms = g._utcMs ?? parseGameDate(g.local_date)?.getTime() ?? null;
+    if (ms === null) return false;
+    return new Date(ms).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) === todayStr;
   });
 
   if (todayGames.length === 0) {
@@ -814,13 +832,14 @@ function _scheduleAutoRefresh() {
     const now = new Date();
     const todayStr = now.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
     const hasTodayGames = state.games.some((g) => {
-      const d = parseGameDate(g.local_date);
-      return d && d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) === todayStr;
+      const ms = g._utcMs ?? parseGameDate(g.local_date)?.getTime() ?? null;
+      return ms !== null && new Date(ms).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) === todayStr;
     });
     if (!hasTodayGames) return;
     try {
       const updated = await fetchGames(true);
       state.games = updated;
+      _enrichGamesUtcMs(state.games);
       const games = _gamesWithOverrides();
       _renderToday(games);
       atualizarCelulas(games, state.palpitesStore);
