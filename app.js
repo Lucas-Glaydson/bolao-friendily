@@ -296,10 +296,10 @@ function _renderToday(allGames) {
   const allDayKeys = [...new Set(state.games.map(g => {
     const d = parseGameDate(g.local_date);
     if (!d) return "0000-00-00";
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }))].sort();
   const todayDateObj = now;
-  const todayKey = `${todayDateObj.getFullYear()}-${String(todayDateObj.getMonth()+1).padStart(2,"0")}-${String(todayDateObj.getDate()).padStart(2,"0")}`;
+  const todayKey = `${todayDateObj.getFullYear()}-${String(todayDateObj.getMonth() + 1).padStart(2, "0")}-${String(todayDateObj.getDate()).padStart(2, "0")}`;
   const dayNum = allDayKeys.indexOf(todayKey) + 1;
   const daySection = renderDaySection(
     dayNum, todayKey, todayGames,
@@ -441,10 +441,15 @@ function _setupEventListeners() {
   // ── Tabs / Carrossel ──
   const _carousel = document.getElementById("view-carousel");
   const _navBtns = document.querySelectorAll(".section-nav-btn[data-tab]");
+  const _panels = _carousel.querySelectorAll(".view-panel");
+
+  function _updateActiveBtn() {
+    const idx = Math.round(_carousel.scrollLeft / (_carousel.offsetWidth || 1));
+    _navBtns.forEach((btn) => btn.classList.toggle("active", Number(btn.dataset.tab) === idx));
+  }
 
   function _switchTab(idx) {
-    const panelWidth = _carousel.offsetWidth;
-    _carousel.scrollTo({ left: idx * panelWidth, behavior: "smooth" });
+    _carousel.scrollTo({ left: idx * _carousel.offsetWidth, behavior: "smooth" });
     _navBtns.forEach((btn) => btn.classList.toggle("active", Number(btn.dataset.tab) === idx));
   }
 
@@ -452,17 +457,16 @@ function _setupEventListeners() {
     btn.addEventListener("click", () => _switchTab(Number(btn.dataset.tab)));
   });
 
-  // Sincroniza aba ativa ao deslizar
-  const _panels = _carousel.querySelectorAll(".view-panel");
-  const _tabObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-        const idx = [..._panels].indexOf(entry.target);
-        _navBtns.forEach((btn) => btn.classList.toggle("active", Number(btn.dataset.tab) === idx));
-      }
-    });
-  }, { root: _carousel, threshold: 0.5 });
-  _panels.forEach((p) => _tabObserver.observe(p));
+  // Sincroniza aba ao parar de deslizar
+  let _scrollEndTimer;
+  _carousel.addEventListener("scrollend", _updateActiveBtn);
+  _carousel.addEventListener("scroll", () => {
+    clearTimeout(_scrollEndTimer);
+    _scrollEndTimer = setTimeout(_updateActiveBtn, 120);
+  });
+
+  // Estado inicial correto
+  _updateActiveBtn();
 
   // ── Exportar ──
   document.getElementById("btn-export").addEventListener("click", exportJSON);
