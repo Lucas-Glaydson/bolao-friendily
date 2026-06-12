@@ -995,7 +995,7 @@ body {
 
 .today-game:hover {
   border-color: #ff0000;
-  box-shadow: 0 2px 8px rgba(255,0,0,.25);
+  box-shadow: 0 2px 8px rgba(255, 0, 0, .25);
 }
 
 [data-theme="dark"] .today-game {
@@ -1005,7 +1005,7 @@ body {
 
 [data-theme="dark"] .today-game:hover {
   border-color: #ff4444;
-  box-shadow: 0 2px 10px rgba(255,68,68,.3);
+  box-shadow: 0 2px 10px rgba(255, 68, 68, .3);
 }
 
 .today-cazetv {
@@ -1014,6 +1014,20 @@ body {
 }
 
 .today-game:hover .today-cazetv {
+  opacity: 1;
+}
+
+/* Link CazeTV no cabeçalho da coluna de jogo */
+.cazetv-link {
+  display: block;
+  font-size: .75rem;
+  text-decoration: none;
+  opacity: .6;
+  margin-top: 2px;
+  transition: opacity .15s;
+}
+
+.cazetv-link:hover {
   opacity: 1;
 }
 

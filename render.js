@@ -3,6 +3,7 @@
  */
 
 import { AMIGOS, calcularPontos, getStatus, validarPalpite, parseGameDate } from "./utils.js";
+import { getCazeTVLink } from "./cazetv.js";
 import { getPalpite } from "./storage.js";
 import { getTeamName } from "./api.js";
 
@@ -140,6 +141,20 @@ function _renderDaySection(dayNum, dayKey, games, teamsMap, stadiumsMap, palpite
       badge.textContent = rawTime ? _timeToBrt(rawTime, game.stadium_id, stadiumsMap) : "--";
     }
     th.appendChild(badge);
+
+    // Link CazeTV se disponível
+    const cazeUrl = getCazeTVLink(homeName);
+    if (cazeUrl) {
+      const cazeLink = document.createElement("a");
+      cazeLink.href = cazeUrl;
+      cazeLink.target = "_blank";
+      cazeLink.rel = "noopener noreferrer";
+      cazeLink.textContent = "📺";
+      cazeLink.className = "cazetv-link";
+      cazeLink.title = "Assistir na CazeTV";
+      th.appendChild(cazeLink);
+    }
+
     trHead.appendChild(th);
   }
 
@@ -254,7 +269,7 @@ function _renderFooter(allGames, palpitesStore) {
 
   const thead = document.createElement("thead");
   const trH = document.createElement("tr");
-  [["Pessoa","col-pessoa"],["Pts","col-day-pts"],["Rank","col-day-pts"]].forEach(([label, cls]) => {
+  [["Pessoa", "col-pessoa"], ["Pts", "col-day-pts"], ["Rank", "col-day-pts"]].forEach(([label, cls]) => {
     const th = document.createElement("th");
     th.textContent = label;
     th.className = cls;
@@ -264,7 +279,7 @@ function _renderFooter(allGames, palpitesStore) {
   table.appendChild(thead);
 
   const tbody = document.createElement("tbody");
-  const MEDALS = ["\ud83e\udd47","\ud83e\udd48","\ud83e\udd49"];
+  const MEDALS = ["\ud83e\udd47", "\ud83e\udd48", "\ud83e\udd49"];
   sorted.forEach(([amigo, pts], idx) => {
     const tr = document.createElement("tr");
     if (idx < 3) tr.className = `row-top-${idx + 1}`;
@@ -301,7 +316,7 @@ function _updateRankingBar(sorted) {
   if (sorted.every(([, v]) => v === 0)) { bar.classList.add("hidden"); return; }
   bar.classList.remove("hidden");
   list.innerHTML = "";
-  const MEDALS = ["\ud83e\udd47","\ud83e\udd48","\ud83e\udd49"];
+  const MEDALS = ["\ud83e\udd47", "\ud83e\udd48", "\ud83e\udd49"];
   sorted.forEach(([amigo, pts], idx) => {
     const div = document.createElement("div");
     div.className = `ranking-item${idx < 3 ? ` pos-${idx + 1}` : ""}`;

@@ -9,6 +9,7 @@ import {
   getPalpite, setPalpite, loadOverrides, saveOverrides,
   loadBaseData, mergeStores,
 } from "./storage.js";
+import { getCazeTVLink } from "./cazetv.js";
 import {
   AMIGOS, validarPalpite, normalizarPalpite,
   randomPlacar, debounce, calcularPontos, getStatus, parseGameDate,
@@ -246,7 +247,8 @@ function _renderToday(allGames) {
       } else {
         scoreBadge = `<span class="today-score scheduled">${hora}</span>`;
       }
-      return `<a class="today-game" href="https://www.youtube.com/@CazeTV" target="_blank" rel="noopener noreferrer" title="Assistir na CazeTV">
+      const cazeUrl = getCazeTVLink(homeName) ?? "https://www.youtube.com/@CazeTV";
+      return `<a class="today-game" href="${cazeUrl}" target="_blank" rel="noopener noreferrer" title="Assistir na CazeTV">`
         <span class="today-team" title="${homeName}">${homeFlagHtml} ${homeShort}</span>
         ${scoreBadge}
         <span class="today-team" title="${awayName}">${awayFlagHtml} ${awayShort}</span>
