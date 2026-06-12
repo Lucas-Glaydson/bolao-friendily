@@ -2,7 +2,7 @@
   "versao": 1,
   "palpites": {
     "1": {
-      "Felipe": "02 x 0",
+      "Felipe": "2 x 0",
       "Ingrid": "1 x 2",
       "Mauro": "3 x 1",
       "Caetano": "2 x 0",
@@ -29,7 +29,7 @@
       "Bruno": "1 x 1",
       "AdilsonJR": "1 x 0",
       "Zaine": "2 x 3",
-      "Lucas": "1 x 1"
+      "Lucas": "2 x 1"
     },
     "3": {
       "Felipe": "2 x 0",
@@ -1105,5 +1105,6 @@
       "Anderson": "0 x 0",
       "Zaine": "1 x 1"
     }
-  }
+  },
+  "atualizadoEm": "2026-06-12T15:36:28.619Z"
 }
