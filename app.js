@@ -248,7 +248,7 @@ function _renderToday(allGames) {
         scoreBadge = `<span class="today-score scheduled">${hora}</span>`;
       }
       const cazeUrl = getCazeTVLink(homeName) ?? "https://www.youtube.com/@CazeTV";
-      return `<a class="today-game" href="${cazeUrl}" target="_blank" rel="noopener noreferrer" title="Assistir na CazeTV">`
+      return `<a class="today-game" href="${cazeUrl}" target="_blank" rel="noopener noreferrer" title="Assistir na CazeTV">
         <span class="today-team" title="${homeName}">${homeFlagHtml} ${homeShort}</span>
         ${scoreBadge}
         <span class="today-team" title="${awayName}">${awayFlagHtml} ${awayShort}</span>
@@ -336,7 +336,7 @@ function _handleGameClick(game, homeName, awayName, teamsMap, stadiumsMap) {
       <div class="game-detail-row"><span class="game-detail-label">Cidade</span><span>${stadiumCity}</span></div>
       <div class="game-detail-row"><span class="game-detail-label">ID</span><span>#${game.id}</span></div>
     </div>
-  `;
+    `;
   modal.classList.remove("hidden");
   document.getElementById("btn-close-game-modal").focus();
 }
@@ -706,23 +706,23 @@ function _renderCalendar(games, filter = "all") {
       card.className = `cal-card cal-card-${status}`;
       card.dataset.gameId = String(game.id);
       card.innerHTML = `
-        <div class="cal-card-top">
+    <div class="cal-card-top">
           <span class="cal-meta">Gr.<b>${game.group}</b> · Rd${game.matchday}</span>
           <span class="cal-time">${timeStr}</span>
         </div>
-        <div class="cal-card-teams">
-          <div class="cal-team cal-team-home" title="${homeName}">
-            ${homeFlagHtml}
-            <span class="cal-team-name">${homeName}</span>
-          </div>
-          <div class="cal-card-score">${scoreHtml}</div>
-          <div class="cal-team cal-team-away" title="${awayName}">
-            ${awayFlagHtml}
-            <span class="cal-team-name">${awayName}</span>
-          </div>
-        </div>
-        ${admin ? `<div class="cal-card-footer"><button class="cal-edit-btn" data-game-id="${game.id}" aria-label="Editar placar: ${homeName} × ${awayName}" title="Editar placar">✏️ Editar placar</button></div>` : ""}
-      `;
+    <div class="cal-card-teams">
+      <div class="cal-team cal-team-home" title="${homeName}">
+        ${homeFlagHtml}
+        <span class="cal-team-name">${homeName}</span>
+      </div>
+      <div class="cal-card-score">${scoreHtml}</div>
+      <div class="cal-team cal-team-away" title="${awayName}">
+        ${awayFlagHtml}
+        <span class="cal-team-name">${awayName}</span>
+      </div>
+    </div>
+        ${ admin ? `<div class="cal-card-footer"><button class="cal-edit-btn" data-game-id="${game.id}" aria-label="Editar placar: ${homeName} × ${awayName}" title="Editar placar">✏️ Editar placar</button></div>` : "" }
+  `;
       gamesEl.appendChild(card);
     }
 
@@ -745,8 +745,7 @@ function _openScoreModal(gameId) {
   const awayName = getTeamName(game, "away", state.teamsMap);
   const existing = state.overrides[String(gameId)];
 
-  document.getElementById("score-modal-game").textContent = `${homeName}  ×  ${awayName}`;
-  document.getElementById("score-home-label").textContent = homeName;
+  document.getElementById("score-modal-game").textContent = `${homeName} × ${awayName}`;  document.getElementById("score-home-label").textContent = homeName;
   document.getElementById("score-away-label").textContent = awayName;
   document.getElementById("score-home").value = existing?.home_score ?? game.home_score ?? 0;
   document.getElementById("score-away").value = existing?.away_score ?? game.away_score ?? 0;
