@@ -204,10 +204,12 @@ function _renderToday(allGames) {
     })
     .map((g) => {
       const status = getStatus(g, now);
-      const homeFlag = getTeamFlag(g, "home", state.teamsMap) ?? "";
-      const awayFlag = getTeamFlag(g, "away", state.teamsMap) ?? "";
+      const homeFlag = getTeamFlag(g, "home", state.teamsMap);
+      const awayFlag = getTeamFlag(g, "away", state.teamsMap);
       const homeName = getTeamName(g, "home", state.teamsMap) || g.home_team_name_en;
       const awayName = getTeamName(g, "away", state.teamsMap) || g.away_team_name_en;
+      const homeFlagHtml = homeFlag ? `<img class="cal-flag" src="${homeFlag}" alt="${homeName}" loading="lazy">` : "";
+      const awayFlagHtml = awayFlag ? `<img class="cal-flag" src="${awayFlag}" alt="${awayName}" loading="lazy">` : "";
       const d = parseGameDate(g.local_date);
       const hora = d ? d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }) : "";
       let scoreBadge;
@@ -219,9 +221,9 @@ function _renderToday(allGames) {
         scoreBadge = `<span class="today-score scheduled">${hora}</span>`;
       }
       return `<div class="today-game">
-        <span class="today-team">${homeFlag} ${homeName}</span>
+        <span class="today-team">${homeFlagHtml} ${homeName}</span>
         ${scoreBadge}
-        <span class="today-team">${awayFlag} ${awayName}</span>
+        <span class="today-team">${awayFlagHtml} ${awayName}</span>
       </div>`;
     }).join("");
 
@@ -232,8 +234,8 @@ function _renderToday(allGames) {
       <span class="today-ranking-title">📊 Ranking do dia</span>
       <div class="today-ranking-list">`
       + sortedDay.map(([amigo, pts], i) =>
-          `<span class="today-rank-item${i < 3 ? " top" : ""}">${i < 3 ? MEDALS[i] : `#${i+1}`} ${amigo} <b>${pts}pt</b></span>`
-        ).join("")
+        `<span class="today-rank-item${i < 3 ? " top" : ""}">${i < 3 ? MEDALS[i] : `#${i + 1}`} ${amigo} <b>${pts}pt</b></span>`
+      ).join("")
       + `</div></div>`;
   }
 
