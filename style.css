@@ -1210,8 +1210,47 @@ body {
   border-radius: var(--radius);
   padding: .75rem 1rem;
   margin-top: 1.2rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
+
+/* ============================================================
+   SECTION NAV
+   ============================================================ */
+.section-nav {
+  display: flex;
+  gap: .4rem;
+  flex-wrap: wrap;
+  padding: .6rem 1rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: var(--sticky-top, 52px);
+  z-index: 10;
+  margin-bottom: .5rem;
+}
+
+.section-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .32rem .8rem;
+  border-radius: 20px;
+  font-size: .78rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--text-muted);
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  transition: background .12s, color .12s, border-color .12s;
+  white-space: nowrap;
+}
+
+.section-nav-btn:hover {
+  background: var(--green-dark);
+  color: var(--gold);
+  border-color: var(--green-dark);
+}
+
 
 .ranking-bar h2 {
   font-size: .78rem;
