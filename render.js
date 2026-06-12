@@ -28,10 +28,12 @@ export function renderTabela(
     return true;
   });
 
-  // Ordena: grupo → rodada → data
+  // Ordena: rodada → grupo → data
   games.sort((a, b) => {
-    if (a.group !== b.group) return a.group.localeCompare(b.group);
-    return parseInt(a.matchday) - parseInt(b.matchday);
+    const mda = parseInt(a.matchday) || 0;
+    const mdb = parseInt(b.matchday) || 0;
+    if (mda !== mdb) return mda - mdb;
+    return a.group.localeCompare(b.group);
   });
 
   _renderHeader();
@@ -155,29 +157,23 @@ function _renderBody(games, teamsMap, stadiumsMap, palpitesStore, isAdmin, onPal
     return;
   }
 
-  let currentGroup = null;
   let currentMatchday = null;
   let mdGames = [];
   let mdSubtotals = _newSubtotals();
 
-  const flushMatchday = () => {
+  const flushRound = () => {
     if (mdGames.length === 0) return;
-    tbody.appendChild(_makeSubtotalRow(mdGames, mdSubtotals, currentGroup, currentMatchday));
+    tbody.appendChild(_makeSubtotalRow(mdGames, mdSubtotals, currentMatchday));
     mdGames = [];
     mdSubtotals = _newSubtotals();
   };
 
   for (const game of games) {
-    // Novo grupo?
-    if (game.group !== currentGroup) {
-      flushMatchday();
-      currentGroup = game.group;
+    // Nova rodada?
+    if (game.matchday !== currentMatchday) {
+      flushRound();
       currentMatchday = game.matchday;
-      tbody.appendChild(_makeGroupHeaderRow(game.group));
-    } else if (game.matchday !== currentMatchday) {
-      // Nova rodada dentro do mesmo grupo
-      flushMatchday();
-      currentMatchday = game.matchday;
+      tbody.appendChild(_makeRoundHeaderRow(game.matchday));
     }
 
     mdGames.push(game);
@@ -185,21 +181,21 @@ function _renderBody(games, teamsMap, stadiumsMap, palpitesStore, isAdmin, onPal
     tbody.appendChild(tr);
   }
 
-  flushMatchday();
+  flushRound();
 }
 
 /* ─────────────────────────────────────────────────────────
    GROUP HEADER ROW
    ───────────────────────────────────────────────────────── */
 
-function _makeGroupHeaderRow(group) {
+function _makeRoundHeaderRow(matchday) {
   const tr = document.createElement("tr");
   tr.className = "row-group-header";
 
   // Célula do rótulo — sticky left (cobre Jogo + Placar)
   const th = document.createElement("th");
   th.colSpan = 2;
-  th.textContent = `⚽  GRUPO  ${group}`;
+  th.textContent = `⚽  RODADA  ${matchday}`;
   th.scope = "rowgroup";
   tr.appendChild(th);
 
@@ -215,7 +211,7 @@ function _makeGroupHeaderRow(group) {
    SUBTOTAL ROW (após cada rodada dentro de um grupo)
    ───────────────────────────────────────────────────────── */
 
-function _makeSubtotalRow(mdGames, subtotals, group, matchday) {
+function _makeSubtotalRow(mdGames, subtotals, matchday) {
   const tr = document.createElement("tr");
   tr.className = "row-subtotal";
 
@@ -223,7 +219,7 @@ function _makeSubtotalRow(mdGames, subtotals, group, matchday) {
 
   const tdLabel = document.createElement("td");
   tdLabel.colSpan = 2;
-  tdLabel.textContent = `↳ Subtotal  Grupo ${group}  ·  Rodada ${matchday}`;
+  tdLabel.textContent = `↳ Subtotal  Rodada ${matchday}`;
   tdLabel.style.cssText = "text-align:right;font-weight:600;font-size:.7rem;color:var(--text-muted)";
   tr.appendChild(tdLabel);
 
