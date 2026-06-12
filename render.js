@@ -60,14 +60,13 @@ export function atualizarCelulas(games, palpitesStore) {
       else if (status === "live") cells[1].textContent = `${game.home_score ?? 0} x ${game.away_score ?? 0} 🔴`;
     }
 
-    // Resultado de cada amigo
-    let colIdx = 2;
-    for (const amigo of AMIGOS) {
+    // Cor do palpite de cada amigo
+    for (let i = 0; i < AMIGOS.length; i++) {
+      const amigo = AMIGOS[i];
       const palpite = getPalpite(game.id, amigo, palpitesStore);
       const pts = calcularPontos(palpite, oficialPlacar);
-      const td = cells[colIdx + 1];
-      if (td) _applyResultCell(td, pts, palpite);
-      colIdx += 2;
+      const td = cells[2 + i];
+      if (td) _applyPalpiteColor(td, pts);
     }
   }
 }
@@ -87,9 +86,8 @@ export function atualizarTotais(allGames, palpitesStore) {
 export function updateResultCell(gameId, amigoIdx, pts, palpite) {
   const tr = document.querySelector(`tr[data-game-id="${CSS.escape(String(gameId))}"]`);
   if (!tr) return;
-  const colIdx = 6 + amigoIdx * 2;
-  const td = tr.cells[colIdx + 1];
-  if (td) _applyResultCell(td, pts, palpite);
+  const td = tr.cells[2 + amigoIdx];
+  if (td) _applyPalpiteColor(td, pts);
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -148,7 +146,7 @@ function _renderBody(games, teamsMap, stadiumsMap, palpitesStore, isAdmin, onPal
   if (games.length === 0) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
-    td.colSpan = 6 + AMIGOS.length * 2 + 1;
+    td.colSpan = 2 + AMIGOS.length;
     td.textContent = "Nenhum jogo encontrado para os filtros selecionados.";
     td.style.cssText = "text-align:center;padding:2rem;color:var(--text-muted)";
     tr.appendChild(td);
@@ -239,7 +237,7 @@ function _makeDayHeaderRow(dayNum, dayKey) {
   tr.appendChild(th);
 
   const tdFill = document.createElement("td");
-  tdFill.colSpan = AMIGOS.length * 2 + 1;
+  tdFill.colSpan = AMIGOS.length;
   tr.appendChild(tdFill);
 
   return tr;
@@ -261,24 +259,14 @@ function _makeSubtotalRow(mdGames, subtotals, dayKey) {
   tdLabel.style.cssText = "text-align:right;font-weight:600;font-size:.7rem;color:var(--text-muted)";
   tr.appendChild(tdLabel);
 
-  let sectionTotal = 0;
   for (const amigo of AMIGOS) {
-    const tdP = document.createElement("td");
-    tr.appendChild(tdP);
-
-    const tdR = document.createElement("td");
+    const td = document.createElement("td");
     const pts = subtotals[amigo] ?? 0;
-    tdR.textContent = hasFinished ? String(pts) : "—";
-    tdR.style.cssText = "font-weight:600;text-align:center";
-    if (hasFinished && pts > 0) tdR.style.color = pts >= 3 ? "var(--score-exact-fg)" : "var(--gold-dark)";
-    tr.appendChild(tdR);
-    sectionTotal += pts;
+    td.textContent = hasFinished ? String(pts) : "\u2014";
+    td.style.cssText = "font-weight:700;text-align:center;font-size:.75rem";
+    if (hasFinished && pts > 0) td.style.color = pts >= 3 ? "var(--score-exact-fg)" : "var(--gold-dark)";
+    tr.appendChild(td);
   }
-
-  const tdT = document.createElement("td");
-  tdT.textContent = hasFinished ? String(sectionTotal) : "—";
-  tdT.style.cssText = "font-weight:700;text-align:center";
-  tr.appendChild(tdT);
 
   return tr;
 }
@@ -340,7 +328,6 @@ function _renderGameRow(game, teamsMap, stadiumsMap, palpitesStore, isAdmin, onP
   tr.appendChild(tdPlacar);
 
   // ── Amigos ──
-  let rowTotal = 0;
   for (let i = 0; i < AMIGOS.length; i++) {
     const amigo = AMIGOS[i];
     const palpite = getPalpite(game.id, amigo, palpitesStore);
@@ -348,12 +335,12 @@ function _renderGameRow(game, teamsMap, stadiumsMap, palpitesStore, isAdmin, onP
 
     if (pts !== null) {
       subtotals[amigo] = (subtotals[amigo] ?? 0) + pts;
-      rowTotal += pts;
     }
 
-    // Palpite
+    // Palpite (fundo colorido pelo resultado)
     const tdP = document.createElement("td");
     tdP.className = "col-palpite";
+    _applyPalpiteColor(tdP, pts);
 
     if (isAdmin) {
       const input = document.createElement("input");
@@ -381,19 +368,7 @@ function _renderGameRow(game, teamsMap, stadiumsMap, palpitesStore, isAdmin, onP
       if (palpite) tdP.style.fontFamily = "monospace";
     }
     tr.appendChild(tdP);
-
-    // Resultado
-    const tdR = document.createElement("td");
-    tdR.className = "col-resultado";
-    _applyResultCell(tdR, pts, palpite);
-    tr.appendChild(tdR);
   }
-
-  // ── Σ total (sticky right) ──
-  const tdT = document.createElement("td");
-  tdT.className = "col-total";
-  tdT.textContent = oficialPlacar ? String(rowTotal) : "—";
-  tr.appendChild(tdT);
 
   return tr;
 }
@@ -432,19 +407,12 @@ function _renderFooter(allGames, palpitesStore) {
   tdLabel.textContent = "🏆  TOTAL GERAL";
   trTotal.appendChild(tdLabel);
 
-  let grand = 0;
   for (const amigo of AMIGOS) {
-    trTotal.appendChild(document.createElement("td")); // palpite col empty
     const tdPts = document.createElement("td");
     tdPts.textContent = String(totals[amigo]);
     tdPts.style.cssText = "text-align:center;font-weight:700";
-    grand += totals[amigo];
     trTotal.appendChild(tdPts);
   }
-  const tdGrand = document.createElement("td");
-  tdGrand.textContent = String(grand);
-  tdGrand.style.cssText = "text-align:center;font-weight:700";
-  trTotal.appendChild(tdGrand);
   tfoot.appendChild(trTotal);
 
   // ── RANKING ──
@@ -459,16 +427,12 @@ function _renderFooter(allGames, palpitesStore) {
 
   const MEDALS = ["🥇", "🥈", "🥉"];
   for (const amigo of AMIGOS) {
-    trRank.appendChild(document.createElement("td"));
     const tdPos = document.createElement("td");
     const pos = rankMap.get(amigo) ?? AMIGOS.length;
     tdPos.textContent = pos <= 3 ? MEDALS[pos - 1] : `#${pos}`;
     tdPos.style.cssText = `text-align:center;font-weight:${pos <= 3 ? 700 : 400}`;
     trRank.appendChild(tdPos);
   }
-  const tdRankΣ = document.createElement("td");
-  tdRankΣ.textContent = "—";
-  trRank.appendChild(tdRankΣ);
   tfoot.appendChild(trRank);
 
   // Atualiza a barra de ranking no topo
@@ -502,13 +466,13 @@ function _updateRankingBar(sorted) {
    HELPERS PRIVADOS
    ───────────────────────────────────────────────────────── */
 
-function _applyResultCell(td, pts, palpite) {
-  td.className = "col-resultado";
-  if (pts === 3) { td.textContent = "✅"; td.className += " cell-exact"; td.title = "3 pts – Placar exato!"; }
-  else if (pts === 1) { td.textContent = "🟡"; td.className += " cell-correct"; td.title = "1 pt – Resultado certo"; }
-  else if (pts === 0) { td.textContent = "❌"; td.className += " cell-wrong"; td.title = "0 pts"; }
-  else if (palpite) { td.textContent = "⏳"; td.title = "Aguardando resultado"; }
-  else { td.textContent = ""; }
+/** Aplica cor de fundo \u00e0 c\u00e9lula de palpite com base nos pontos. */
+function _applyPalpiteColor(td, pts) {
+  td.classList.remove("cell-exact", "cell-correct", "cell-wrong");
+  if (pts === 3) { td.classList.add("cell-exact"); td.title = "\u2705 3pts \u2013 Placar exato!"; }
+  else if (pts === 1) { td.classList.add("cell-correct"); td.title = "\ud83d\udfe1 1pt \u2013 Resultado certo"; }
+  else if (pts === 0) { td.classList.add("cell-wrong"); td.title = "\u274c 0pts \u2013 Errou"; }
+  else { td.title = ""; }
 }
 
 function _appendTd(tr, text, cls) {

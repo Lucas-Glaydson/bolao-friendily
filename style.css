@@ -563,7 +563,7 @@ body {
   background: var(--th-bg) !important;
 }
 
-/* Score cells */
+/* Score cells – aplicado na célula do palpite */
 .cell-exact {
   background: var(--score-exact-bg) !important;
   color: var(--score-exact-fg);
@@ -578,6 +578,14 @@ body {
 .cell-wrong {
   background: var(--score-wrong-bg) !important;
   color: var(--score-wrong-fg);
+}
+
+/* Input dentro de célula colorida herda o fundo */
+.cell-exact .palpite-input,
+.cell-correct .palpite-input,
+.cell-wrong .palpite-input {
+  background: transparent !important;
+  border-color: rgba(0,0,0,.2) !important;
 }
 
 /* Status labels */
