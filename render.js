@@ -314,8 +314,6 @@ function _updateRankingBar(sorted) {
   const bar = document.getElementById("ranking-bar");
   const list = document.getElementById("ranking-list");
   if (!bar || !list) return;
-  if (sorted.every(([, v]) => v === 0)) { bar.classList.add("hidden"); return; }
-  bar.classList.remove("hidden");
   list.innerHTML = "";
   const MEDALS = ["\ud83e\udd47", "\ud83e\udd48", "\ud83e\udd49"];
   sorted.forEach(([amigo, pts], idx) => {

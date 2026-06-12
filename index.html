@@ -112,49 +112,57 @@
       <button id="btn-retry" class="btn btn-primary">🔄 Tentar novamente</button>
     </div>
 
-    <!-- ── Seção: Jogos de Hoje ── -->
-    <div id="today-section" class="today-section hidden" aria-label="Jogos de hoje"></div>
-
-    <!-- Ranking bar -->
-    <div id="ranking-bar" class="ranking-bar hidden" aria-label="Ranking atual">
-      <h2>🏅 Ranking</h2>
-      <div id="ranking-list" class="ranking-list" role="list"></div>
-    </div>
-
-    <!-- Nav de seções -->
+    <!-- Nav de abas -->
     <nav id="section-nav" class="section-nav" aria-label="Navegação rápida">
-      <a class="section-nav-btn" id="nav-btn-hoje" href="#">📅 Hoje</a>
-      <a class="section-nav-btn" href="#bolao-footer">🏆 Ranking</a>
-      <a class="section-nav-btn" href="#bolao-tables">📊 Tabelas</a>
-      <a class="section-nav-btn" href="#calendar-section">🗓️ Calendário</a>
+      <button class="section-nav-btn active" data-tab="0">📅 Hoje</button>
+      <button class="section-nav-btn" data-tab="1">🏆 Ranking</button>
+      <button class="section-nav-btn" data-tab="2">📊 Tabelas</button>
+      <button class="section-nav-btn" data-tab="3">🗓️ Calendário</button>
     </nav>
 
-    <!-- ── Seção: Tabela de Palpites ── -->
-    <section class="page-section" aria-label="Tabela de palpites">
-      <div class="section-label">
-        <span class="section-icon">📊</span>
-        <h2>Tabela de Palpites</h2>
-        <span class="section-desc">Jogo · Placar · Pontuação por participante</span>
-      </div>
-      <div id="bolao-tables" class="bolao-tables" role="region" aria-label="Tabela de palpites"></div>
-      <div id="bolao-footer" class="bolao-footer"></div>
-    </section>
+    <!-- Carrossel de painéis -->
+    <div id="view-carousel" class="view-carousel">
 
-    <!-- ── Seção: Calendário ── -->
-    <section id="calendar-section" class="page-section calendar-section hidden" aria-label="Calendário de jogos">
-      <div class="section-label">
-        <span class="section-icon">📅</span>
-        <h2>Calendário</h2>
-        <span id="calendar-count" class="section-desc"></span>
+      <!-- Painel 0: Hoje -->
+      <div class="view-panel">
+        <div id="today-section" class="today-section" aria-label="Jogos de hoje"></div>
       </div>
-      <div id="cal-filter-bar" class="cal-filter-bar">
-        <button class="cal-filter-btn active" data-filter="all">Todos</button>
-        <button class="cal-filter-btn" data-filter="scheduled">⏳ Agendados</button>
-        <button class="cal-filter-btn" data-filter="live">🔴 Ao vivo</button>
-        <button class="cal-filter-btn" data-filter="finished">✅ Finalizados</button>
+
+      <!-- Painel 1: Ranking -->
+      <div class="view-panel">
+        <div id="ranking-bar" class="ranking-bar" aria-label="Ranking atual">
+          <h2>🏅 Ranking</h2>
+          <div id="ranking-list" class="ranking-list" role="list"></div>
+        </div>
       </div>
-      <div id="calendar-container" class="calendar-container"></div>
-    </section>
+
+      <!-- Painel 2: Tabelas de Palpites -->
+      <div class="view-panel">
+        <section class="page-section" aria-label="Tabela de palpites">
+          <div id="bolao-tables" class="bolao-tables" role="region" aria-label="Tabela de palpites"></div>
+          <div id="bolao-footer" class="bolao-footer"></div>
+        </section>
+      </div>
+
+      <!-- Painel 3: Calendário -->
+      <div class="view-panel">
+        <section id="calendar-section" class="page-section calendar-section" aria-label="Calendário de jogos">
+          <div class="section-label">
+            <span class="section-icon">📅</span>
+            <h2>Calendário</h2>
+            <span id="calendar-count" class="section-desc"></span>
+          </div>
+          <div id="cal-filter-bar" class="cal-filter-bar">
+            <button class="cal-filter-btn active" data-filter="all">Todos</button>
+            <button class="cal-filter-btn" data-filter="scheduled">⏳ Agendados</button>
+            <button class="cal-filter-btn" data-filter="live">🔴 Ao vivo</button>
+            <button class="cal-filter-btn" data-filter="finished">✅ Finalizados</button>
+          </div>
+          <div id="calendar-container" class="calendar-container"></div>
+        </section>
+      </div>
+
+    </div>
 
   </main>
 

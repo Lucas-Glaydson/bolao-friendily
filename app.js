@@ -190,8 +190,10 @@ function _renderToday(allGames) {
     return d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) === todayStr;
   });
 
-  if (todayGames.length === 0) { el.classList.add("hidden"); return; }
-  el.classList.remove("hidden");
+  if (todayGames.length === 0) {
+    el.innerHTML = `<p class="today-empty">🌟 Sem jogos hoje.</p>`;
+    return;
+  }
 
   // ── Calcula ranking do dia ──
   const dayPts = {};
@@ -417,18 +419,31 @@ function _setupEventListeners() {
     _renderAll();
   });
 
-  // ── Nav: botão Hoje → tabela do dia atual ──
-  document.getElementById("nav-btn-hoje")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    const today = new Date();
-    const y = today.getFullYear();
-    const m = String(today.getMonth() + 1).padStart(2, "0");
-    const d = String(today.getDate()).padStart(2, "0");
-    const dayKey = `${y}-${m}-${d}`;
-    const el = document.getElementById(`day-section-${dayKey}`);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    else document.getElementById("bolao-tables")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // ── Tabs / Carrossel ──
+  const _carousel = document.getElementById("view-carousel");
+  const _navBtns = document.querySelectorAll(".section-nav-btn[data-tab]");
+
+  function _switchTab(idx) {
+    const panelWidth = _carousel.offsetWidth;
+    _carousel.scrollTo({ left: idx * panelWidth, behavior: "smooth" });
+    _navBtns.forEach((btn) => btn.classList.toggle("active", Number(btn.dataset.tab) === idx));
+  }
+
+  _navBtns.forEach((btn) => {
+    btn.addEventListener("click", () => _switchTab(Number(btn.dataset.tab)));
   });
+
+  // Sincroniza aba ativa ao deslizar
+  const _panels = _carousel.querySelectorAll(".view-panel");
+  const _tabObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+        const idx = [..._panels].indexOf(entry.target);
+        _navBtns.forEach((btn) => btn.classList.toggle("active", Number(btn.dataset.tab) === idx));
+      }
+    });
+  }, { root: _carousel, threshold: 0.5 });
+  _panels.forEach((p) => _tabObserver.observe(p));
 
   // ── Exportar ──
   document.getElementById("btn-export").addEventListener("click", exportJSON);
@@ -721,7 +736,7 @@ function _renderCalendar(games, filter = "all") {
         <span class="cal-team-name">${awayName}</span>
       </div>
     </div>
-        ${ admin ? `<div class="cal-card-footer"><button class="cal-edit-btn" data-game-id="${game.id}" aria-label="Editar placar: ${homeName} × ${awayName}" title="Editar placar">✏️ Editar placar</button></div>` : "" }
+        ${admin ? `<div class="cal-card-footer"><button class="cal-edit-btn" data-game-id="${game.id}" aria-label="Editar placar: ${homeName} × ${awayName}" title="Editar placar">✏️ Editar placar</button></div>` : ""}
   `;
       gamesEl.appendChild(card);
     }
@@ -745,7 +760,7 @@ function _openScoreModal(gameId) {
   const awayName = getTeamName(game, "away", state.teamsMap);
   const existing = state.overrides[String(gameId)];
 
-  document.getElementById("score-modal-game").textContent = `${homeName} × ${awayName}`;  document.getElementById("score-home-label").textContent = homeName;
+  document.getElementById("score-modal-game").textContent = `${homeName} × ${awayName}`; document.getElementById("score-home-label").textContent = homeName;
   document.getElementById("score-away-label").textContent = awayName;
   document.getElementById("score-home").value = existing?.home_score ?? game.home_score ?? 0;
   document.getElementById("score-away").value = existing?.away_score ?? game.away_score ?? 0;
