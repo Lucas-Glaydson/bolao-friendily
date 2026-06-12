@@ -835,7 +835,7 @@ body {
   border: 1.5px solid var(--gold, #f5c842);
   border-radius: 12px;
   padding: 12px 16px 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
 }
 
 .today-header {
@@ -869,6 +869,7 @@ body {
 .today-game {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   background: var(--bg, #f7f9fb);
   border: 1px solid var(--border, #e0e0e0);
@@ -879,15 +880,28 @@ body {
 }
 
 [data-theme="dark"] .today-game {
-  background: rgba(255,255,255,.06);
-  border-color: rgba(255,255,255,.12);
+  background: rgba(255, 255, 255, .06);
+  border-color: rgba(255, 255, 255, .12);
 }
 
 .today-team {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   font-weight: 600;
-  max-width: 110px;
+  font-size: .78rem;
+  max-width: 90px;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.today-team .cal-flag {
+  width: 16px;
+  height: 11px;
+  flex-shrink: 0;
 }
 
 .today-score {
@@ -910,17 +924,24 @@ body {
 }
 
 .today-score.scheduled {
-  background: rgba(0,0,0,.07);
+  background: rgba(0, 0, 0, .07);
   color: inherit;
 }
 
 [data-theme="dark"] .today-score.scheduled {
-  background: rgba(255,255,255,.1);
+  background: rgba(255, 255, 255, .1);
 }
 
 @keyframes pulse-live {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: .6; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: .6;
+  }
 }
 
 .today-ranking {
@@ -930,7 +951,7 @@ body {
 }
 
 [data-theme="dark"] .today-ranking {
-  border-color: rgba(255,255,255,.12);
+  border-color: rgba(255, 255, 255, .12);
 }
 
 .today-ranking-title {
@@ -958,8 +979,8 @@ body {
 }
 
 [data-theme="dark"] .today-rank-item {
-  background: rgba(255,255,255,.07);
-  border-color: rgba(255,255,255,.12);
+  background: rgba(255, 255, 255, .07);
+  border-color: rgba(255, 255, 255, .12);
 }
 
 .today-rank-item.top {
