@@ -246,11 +246,12 @@ function _renderToday(allGames) {
       } else {
         scoreBadge = `<span class="today-score scheduled">${hora}</span>`;
       }
-      return `<div class="today-game">
+      return `<a class="today-game" href="https://www.youtube.com/@CazeTV" target="_blank" rel="noopener noreferrer" title="Assistir na CazeTV">
         <span class="today-team" title="${homeName}">${homeFlagHtml} ${homeShort}</span>
         ${scoreBadge}
         <span class="today-team" title="${awayName}">${awayFlagHtml} ${awayShort}</span>
-      </div>`;
+        <span class="today-cazetv">📺</span>
+      </a>`;
     }).join("");
 
   // ── Monta HTML do ranking diário ──

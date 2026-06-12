@@ -66,7 +66,9 @@ html {
 }
 
 @media (min-width: 2560px) {
-  html { font-size: 14px; }
+  html {
+    font-size: 14px;
+  }
 }
 
 body {
@@ -466,9 +468,20 @@ body {
   display: inline-block;
 }
 
-.game-score-badge.finished { background: var(--score-exact-bg); color: var(--score-exact-fg); }
-.game-score-badge.live { background: #e53e3e; color: #fff; }
-.game-score-badge.scheduled { background: transparent; color: var(--text-muted); }
+.game-score-badge.finished {
+  background: var(--score-exact-bg);
+  color: var(--score-exact-fg);
+}
+
+.game-score-badge.live {
+  background: #e53e3e;
+  color: #fff;
+}
+
+.game-score-badge.scheduled {
+  background: transparent;
+  color: var(--text-muted);
+}
 
 .col-day-pts {
   min-width: 44px;
@@ -629,9 +642,17 @@ body {
   text-align: center;
 }
 
-.row-top-1 td { background: linear-gradient(90deg,#ffd70022,transparent) !important; }
-.row-top-2 td { background: linear-gradient(90deg,#e0e0e022,transparent) !important; }
-.row-top-3 td { background: linear-gradient(90deg,#d4924a22,transparent) !important; }
+.row-top-1 td {
+  background: linear-gradient(90deg, #ffd70022, transparent) !important;
+}
+
+.row-top-2 td {
+  background: linear-gradient(90deg, #e0e0e022, transparent) !important;
+}
+
+.row-top-3 td {
+  background: linear-gradient(90deg, #d4924a22, transparent) !important;
+}
 
 /* Score cells – aplicado na célula do palpite */
 .cell-exact {
@@ -656,7 +677,7 @@ body {
 .cell-correct .palpite-input,
 .cell-wrong .palpite-input {
   background: transparent !important;
-  border-color: rgba(255,255,255,.3) !important;
+  border-color: rgba(255, 255, 255, .3) !important;
   color: inherit !important;
 }
 
@@ -967,11 +988,33 @@ body {
   padding: 6px 10px;
   font-size: .82rem;
   white-space: nowrap;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.today-game:hover {
+  border-color: #ff0000;
+  box-shadow: 0 2px 8px rgba(255,0,0,.25);
 }
 
 [data-theme="dark"] .today-game {
   background: rgba(255, 255, 255, .05);
   border-color: rgba(255, 255, 255, .1);
+}
+
+[data-theme="dark"] .today-game:hover {
+  border-color: #ff4444;
+  box-shadow: 0 2px 10px rgba(255,68,68,.3);
+}
+
+.today-cazetv {
+  font-size: .9rem;
+  opacity: .7;
+}
+
+.today-game:hover .today-cazetv {
+  opacity: 1;
 }
 
 .today-team {
@@ -1074,19 +1117,36 @@ body {
   min-width: 0;
 }
 
-.podium-medal { font-size: 1.4rem; line-height: 1; }
-.podium-name  { font-size: .78rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.podium-pts   { font-size: .85rem; font-weight: 800; }
+.podium-medal {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.podium-name {
+  font-size: .78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.podium-pts {
+  font-size: .85rem;
+  font-weight: 800;
+}
 
 .today-podium-card.pos-1 {
   background: linear-gradient(145deg, #ffd700, #ffb300);
   color: #1a1a1a;
-  box-shadow: 0 3px 10px rgba(255,193,7,.4);
+  box-shadow: 0 3px 10px rgba(255, 193, 7, .4);
 }
+
 .today-podium-card.pos-2 {
   background: linear-gradient(145deg, #e8e8e8, #bdbdbd);
   color: #1a1a1a;
 }
+
 .today-podium-card.pos-3 {
   background: linear-gradient(145deg, #d4924a, #b5651d);
   color: #fff;
@@ -1765,8 +1825,10 @@ body {
    IMPRESSÃO / PDF
    ============================================================ */
 @media print {
+
   /* Força fundo branco e texto escuro independente do tema */
-  :root, [data-theme="dark"] {
+  :root,
+  [data-theme="dark"] {
     --bg: #fff !important;
     --bg-alt: #f5f5f5 !important;
     --text: #111 !important;
@@ -1787,19 +1849,42 @@ body {
   .btn,
   .ranking-bar,
   .palpite-input,
-  .game-link { display: none !important; }
+  .game-link {
+    display: none !important;
+  }
 
   /* Exibe os palpites como texto simples */
-  .col-palpite { font-family: monospace; }
+  .col-palpite {
+    font-family: monospace;
+  }
 
-  body { font-size: 10px; }
+  body {
+    font-size: 10px;
+  }
 
   /* Quebra de página entre dias */
-  .row-group-header { page-break-before: always; }
-  .row-group-header:first-child { page-break-before: avoid; }
+  .row-group-header {
+    page-break-before: always;
+  }
+
+  .row-group-header:first-child {
+    page-break-before: avoid;
+  }
 
   /* Tabela ocupa toda a largura */
-  .table-scroll { overflow: visible !important; max-height: none !important; }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { border: 1px solid #ccc; padding: 3px 5px; }
+  .table-scroll {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    border: 1px solid #ccc;
+    padding: 3px 5px;
+  }
 }
