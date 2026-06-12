@@ -234,8 +234,7 @@ function _makeDayHeaderRow(dayNum, dayKey) {
 
   const th = document.createElement("th");
   th.colSpan = 2;
-  th.textContent = `📅  DIA ${dayNum}  —  ${_formatDayLabel(dayKey)}`;
-  th.title = _formatDayLabelFull(dayKey);
+  th.textContent = `📅  DIA ${dayNum}  ·  ${_formatDayLabelFull(dayKey)}`;
   th.scope = "rowgroup";
   tr.appendChild(th);
 

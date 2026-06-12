@@ -953,7 +953,7 @@ body {
 .today-ranking {
   border-top: 1px solid var(--border);
   padding-top: 10px;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 [data-theme="dark"] .today-ranking {
