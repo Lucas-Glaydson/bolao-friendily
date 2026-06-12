@@ -8,7 +8,7 @@
  *   GET /get/groups   → classificação dos grupos
  */
 
-import { saveCache, loadCache } from "./storage.js";
+import { saveCache, loadCache, loadCacheStale } from "./storage.js";
 
 const BASE_URL = "https://worldcup26.ir";
 
@@ -29,12 +29,26 @@ async function fetchEndpoint(path, skipCache = false) {
     if (cached !== null) return cached;
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, { mode: "cors" });
-  if (!res.ok) throw new Error(`HTTP ${res.status} – ${path}`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10_000);
 
-  const data = await res.json();
-  saveCache(cacheKey, data);
-  return data;
+  try {
+    const res = await fetch(`${BASE_URL}${path}`, { mode: "cors", signal: controller.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status} – ${path}`);
+    const data = await res.json();
+    saveCache(cacheKey, data);
+    return data;
+  } catch (err) {
+    // Fallback: usa cache expirado se existir
+    const stale = loadCacheStale(cacheKey);
+    if (stale !== null) {
+      console.warn(`[api] Usando cache expirado para ${path}:`, err.message);
+      return stale;
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 /* ─────────────────────────────────────────────────────────

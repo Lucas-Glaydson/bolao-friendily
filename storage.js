@@ -155,6 +155,18 @@ export function loadCache(key) {
   }
 }
 
+/** Retorna dados do cache ignorando TTL (fallback quando API falha). */
+export function loadCacheStale(key) {
+  try {
+    const raw = localStorage.getItem(CACHE_PREFIX + key);
+    if (!raw) return null;
+    const { data } = JSON.parse(raw);
+    return data ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /* ─────────────────────────────────────────────────────────
    OVERRIDES MANUAIS DE PLACAR
    ───────────────────────────────────────────────────────── */
