@@ -77,10 +77,17 @@ export function mergeStores(baseStore, localStore) {
   for (const [gameId, picks] of Object.entries(baseStore.palpites ?? {})) {
     merged.palpites[gameId] = { ...picks };
   }
-  // Sobrescreve com localStorage (tem prioridade)
+  // Mescla localStorage: para cada pessoa, só aplica se o localStorage tiver
+  // um valor E o JSON base NÃO tiver (evita apagar dados novos do JSON com
+  // dados antigos/incompletos do localStorage).
   for (const [gameId, picks] of Object.entries(localStore.palpites ?? {})) {
     if (!merged.palpites[gameId]) merged.palpites[gameId] = {};
-    Object.assign(merged.palpites[gameId], picks);
+    for (const [amigo, palpite] of Object.entries(picks)) {
+      // Só sobrescreve se o JSON base não tem valor para esse jogo+amigo
+      if (!merged.palpites[gameId][amigo]) {
+        merged.palpites[gameId][amigo] = palpite;
+      }
+    }
   }
   return merged;
 }
