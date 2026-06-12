@@ -65,13 +65,18 @@ export function atualizarCelulas(games, palpitesStore) {
       }
     }
     for (const amigo of AMIGOS) {
-      const td = document.querySelector(
+      const tds = document.querySelectorAll(
         `td.col-palpite[data-game-id="${CSS.escape(String(game.id))}"][data-amigo="${CSS.escape(amigo)}"]`
       );
-      if (!td) continue;
-      const palpite = getPalpite(game.id, amigo, palpitesStore);
-      const pts = calcularPontos(palpite, oficialPlacar);
-      _applyPalpiteColor(td, pts);
+      tds.forEach((td) => {
+        const palpite = getPalpite(game.id, amigo, palpitesStore);
+        const pts = calcularPontos(palpite, oficialPlacar);
+        const livePlacar = status === "live" && game.home_score != null
+          ? `${game.home_score} x ${game.away_score}` : null;
+        const ptsProvisorio = pts !== null ? pts : calcularPontos(palpite, livePlacar);
+        td.classList.toggle("cell-provisional", status === "live" && pts === null);
+        _applyPalpiteColor(td, ptsProvisorio);
+      });
     }
   }
 }
@@ -172,7 +177,7 @@ function _renderDaySection(dayNum, dayKey, games, teamsMap, stadiumsMap, palpite
   table.appendChild(thead);
 
   const tbody = document.createElement("tbody");
-  const hasFinished = games.some(g => g.finished === "TRUE");
+  const hasFinished = games.some(g => g.finished === "TRUE" || getStatus(g) === "live");
 
   for (const amigo of AMIGOS) {
     const tr = document.createElement("tr");
@@ -187,15 +192,23 @@ function _renderDaySection(dayNum, dayKey, games, teamsMap, stadiumsMap, palpite
 
     for (const game of games) {
       const palpite = getPalpite(game.id, amigo, palpitesStore);
+      const status = getStatus(game);
       const oficialPlacar = game.finished === "TRUE" ? `${game.home_score} x ${game.away_score}` : null;
+      // Placar provisório para jogos ao vivo
+      const livePlacar = status === "live" && game.home_score != null
+        ? `${game.home_score} x ${game.away_score}`
+        : null;
       const pts = calcularPontos(palpite, oficialPlacar);
+      const ptsProvisorio = pts !== null ? pts : calcularPontos(palpite, livePlacar);
       if (pts !== null) dayTotal += pts;
+      else if (ptsProvisorio !== null) dayTotal += ptsProvisorio;
 
       const td = document.createElement("td");
       td.className = "col-palpite";
       td.dataset.gameId = String(game.id);
       td.dataset.amigo = amigo;
-      _applyPalpiteColor(td, pts);
+      if (status === "live" && pts === null) td.classList.add("cell-provisional");
+      _applyPalpiteColor(td, ptsProvisorio);
 
       if (isAdmin) {
         const input = document.createElement("input");
@@ -227,6 +240,7 @@ function _renderDaySection(dayNum, dayKey, games, teamsMap, stadiumsMap, palpite
     const tdPts = document.createElement("td");
     tdPts.className = "col-day-pts";
     tdPts.textContent = hasFinished ? String(dayTotal) : "--";
+    if (games.some(g => getStatus(g) === "live")) tdPts.title = "Pts provisórios (jogo em andamento)";
     tr.appendChild(tdPts);
 
     tbody.appendChild(tr);

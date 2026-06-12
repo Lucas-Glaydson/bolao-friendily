@@ -681,6 +681,16 @@ body {
   color: inherit !important;
 }
 
+/* Célula provisória (jogo ao vivo) — mesma cor mas com pulso suave */
+.cell-provisional {
+  animation: cell-live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes cell-live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .65; }
+}
+
 /* Status labels */
 .status-live {
   color: var(--red);
