@@ -91,6 +91,7 @@ export function updateResultCell(gameId, amigoIdx, pts) {
 function _renderDaySection(dayNum, dayKey, games, teamsMap, stadiumsMap, palpitesStore, isAdmin, onPalpiteChange, onGameClick) {
   const section = document.createElement("section");
   section.className = "day-section";
+  section.id = `day-section-${dayKey}`;
   section.dataset.dayKey = dayKey;
 
   const header = document.createElement("div");

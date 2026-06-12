@@ -417,6 +417,19 @@ function _setupEventListeners() {
     _renderAll();
   });
 
+  // ── Nav: botão Hoje → tabela do dia atual ──
+  document.getElementById("nav-btn-hoje")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, "0");
+    const d = String(today.getDate()).padStart(2, "0");
+    const dayKey = `${y}-${m}-${d}`;
+    const el = document.getElementById(`day-section-${dayKey}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    else document.getElementById("bolao-tables")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
   // ── Exportar ──
   document.getElementById("btn-export").addEventListener("click", exportJSON);
 
