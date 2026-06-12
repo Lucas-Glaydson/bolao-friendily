@@ -15,7 +15,7 @@ import {
   randomPlacar, debounce, calcularPontos, getStatus, parseGameDate,
 } from "./utils.js";
 import {
-  renderTabela, atualizarCelulas, atualizarTotais, updateResultCell,
+  renderTabela, atualizarCelulas, atualizarTotais, updateResultCell, renderDaySection,
 } from "./render.js";
 
 /* ─────────────────────────────────────────────────────────
@@ -289,6 +289,25 @@ function _renderToday(allGames) {
     <div class="today-games-list">${gamesHtml}</div>
     ${rankingHtml}
   `;
+
+  // ── Tabela de palpites do dia ──
+  const todayTableContainer = document.createElement("div");
+  todayTableContainer.className = "today-table-wrap";
+  const allDayKeys = [...new Set(state.games.map(g => {
+    const d = parseGameDate(g.local_date);
+    if (!d) return "0000-00-00";
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }))].sort();
+  const todayDateObj = now;
+  const todayKey = `${todayDateObj.getFullYear()}-${String(todayDateObj.getMonth()+1).padStart(2,"0")}-${String(todayDateObj.getDate()).padStart(2,"0")}`;
+  const dayNum = allDayKeys.indexOf(todayKey) + 1;
+  const daySection = renderDaySection(
+    dayNum, todayKey, todayGames,
+    state.teamsMap, state.stadiumsMap, state.palpitesStore,
+    isAuthenticated(), _handlePalpiteChange, _handleGameClick
+  );
+  todayTableContainer.appendChild(daySection);
+  el.appendChild(todayTableContainer);
 }
 
 /* ─────────────────────────────────────────────────────────

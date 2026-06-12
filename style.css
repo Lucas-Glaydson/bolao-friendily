@@ -950,6 +950,15 @@ body {
   font-size: .95rem;
 }
 
+.today-table-wrap {
+  margin-top: .75rem;
+}
+
+.today-table-wrap .day-section-header {
+  font-size: .82rem;
+  padding: .4rem .75rem;
+}
+
 [data-theme="dark"] .today-section {
   background: var(--bg-alt);
   border-color: var(--gold-dark, #f9a825);

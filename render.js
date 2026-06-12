@@ -88,6 +88,10 @@ export function updateResultCell(gameId, amigoIdx, pts) {
   if (td) _applyPalpiteColor(td, pts);
 }
 
+export function renderDaySection(dayNum, dayKey, games, teamsMap, stadiumsMap, palpitesStore, isAdmin, onPalpiteChange, onGameClick) {
+  return _renderDaySection(dayNum, dayKey, games, teamsMap, stadiumsMap, palpitesStore, isAdmin, onPalpiteChange, onGameClick);
+}
+
 function _renderDaySection(dayNum, dayKey, games, teamsMap, stadiumsMap, palpitesStore, isAdmin, onPalpiteChange, onGameClick) {
   const section = document.createElement("section");
   section.className = "day-section";
