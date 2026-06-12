@@ -123,6 +123,7 @@ async function _loadAPIData(skipCache = false) {
 
 function _renderAll() {
   // Preserva foco para não interromper digitação
+  _renderToday(_gamesWithOverrides());
   const focused = document.activeElement;
   const focusGameId = focused?.dataset?.gameId;
   const focusAmigo = focused?.dataset?.amigo;
@@ -152,6 +153,98 @@ function _renderAll() {
       try { input.setSelectionRange(focusSelStart, focusSelEnd); } catch { /* noop */ }
     }
   }
+}
+
+/* ─────────────────────────────────────────────────────────
+   SEÇÃO: JOGOS DE HOJE + RANKING DIÁRIO
+   ───────────────────────────────────────────────────────── */
+
+function _renderToday(allGames) {
+  const el = document.getElementById("today-section");
+  if (!el) return;
+
+  const now = new Date();
+  const todayStr = now.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
+  const todayGames = allGames.filter((g) => {
+    const d = parseGameDate(g.local_date);
+    if (!d) return false;
+    return d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) === todayStr;
+  });
+
+  if (todayGames.length === 0) { el.classList.add("hidden"); return; }
+  el.classList.remove("hidden");
+
+  // ── Calcula ranking do dia ──
+  const dayPts = {};
+  for (const a of AMIGOS) dayPts[a] = 0;
+  let anyFinished = false;
+
+  for (const g of todayGames) {
+    const status = getStatus(g, now);
+    if (status !== "finished") continue;
+    anyFinished = true;
+    const oficial = `${g.home_score} x ${g.away_score}`;
+    for (const a of AMIGOS) {
+      const p = state.palpitesStore.palpites[String(g.id)]?.[a];
+      const pts = calcularPontos(p, oficial);
+      if (pts != null) dayPts[a] += pts;
+    }
+  }
+
+  const sortedDay = Object.entries(dayPts).sort((a, b) => b[1] - a[1]);
+  const MEDALS = ["🥇", "🥈", "🥉"];
+
+  // ── Monta HTML dos jogos ──
+  const gamesHtml = todayGames
+    .sort((a, b) => {
+      const da = parseGameDate(a.local_date);
+      const db = parseGameDate(b.local_date);
+      return (da?.getTime() ?? 0) - (db?.getTime() ?? 0);
+    })
+    .map((g) => {
+      const status = getStatus(g, now);
+      const homeFlag = getTeamFlag(g, "home", state.teamsMap) ?? "";
+      const awayFlag = getTeamFlag(g, "away", state.teamsMap) ?? "";
+      const homeName = getTeamName(g, "home", state.teamsMap) || g.home_team_name_en;
+      const awayName = getTeamName(g, "away", state.teamsMap) || g.away_team_name_en;
+      const d = parseGameDate(g.local_date);
+      const hora = d ? d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }) : "";
+      let scoreBadge;
+      if (status === "finished") {
+        scoreBadge = `<span class="today-score finished">${g.home_score} x ${g.away_score}</span>`;
+      } else if (status === "live") {
+        scoreBadge = `<span class="today-score live">🔴 ${g.home_score ?? 0} x ${g.away_score ?? 0}</span>`;
+      } else {
+        scoreBadge = `<span class="today-score scheduled">${hora}</span>`;
+      }
+      return `<div class="today-game">
+        <span class="today-team">${homeFlag} ${homeName}</span>
+        ${scoreBadge}
+        <span class="today-team">${awayFlag} ${awayName}</span>
+      </div>`;
+    }).join("");
+
+  // ── Monta HTML do ranking diário ──
+  let rankingHtml = "";
+  if (anyFinished) {
+    rankingHtml = `<div class="today-ranking">
+      <span class="today-ranking-title">📊 Ranking do dia</span>
+      <div class="today-ranking-list">`
+      + sortedDay.map(([amigo, pts], i) =>
+          `<span class="today-rank-item${i < 3 ? " top" : ""}">${i < 3 ? MEDALS[i] : `#${i+1}`} ${amigo} <b>${pts}pt</b></span>`
+        ).join("")
+      + `</div></div>`;
+  }
+
+  const dateLabel = now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", timeZone: "America/Sao_Paulo" });
+  el.innerHTML = `
+    <div class="today-header">
+      <span class="today-title">📅 Jogos de hoje — <span class="today-date">${dateLabel}</span></span>
+    </div>
+    <div class="today-games-list">${gamesHtml}</div>
+    ${rankingHtml}
+  `;
 }
 
 /* ─────────────────────────────────────────────────────────
