@@ -31,12 +31,12 @@
   --font: 'Inter', 'Roboto', system-ui, sans-serif;
 
   /* score colours */
-  --score-exact-bg: #c8e6c9;
-  --score-exact-fg: #1b5e20;
-  --score-ok-bg: #fff9c4;
-  --score-ok-fg: #5d4037;
-  --score-wrong-bg: #ffcdd2;
-  --score-wrong-fg: #b71c1c;
+  --score-exact-bg: #2e7d32;
+  --score-exact-fg: #ffffff;
+  --score-ok-bg: #f9a825;
+  --score-ok-fg: #1a1a1a;
+  --score-wrong-bg: #c62828;
+  --score-wrong-fg: #ffffff;
 }
 
 /* ---------- Dark Theme ---------- */
@@ -636,18 +636,19 @@ body {
 /* Score cells – aplicado na célula do palpite */
 .cell-exact {
   background: var(--score-exact-bg) !important;
-  color: var(--score-exact-fg);
+  color: var(--score-exact-fg) !important;
   font-weight: 700;
 }
 
 .cell-correct {
   background: var(--score-ok-bg) !important;
-  color: var(--score-ok-fg);
+  color: var(--score-ok-fg) !important;
+  font-weight: 600;
 }
 
 .cell-wrong {
   background: var(--score-wrong-bg) !important;
-  color: var(--score-wrong-fg);
+  color: var(--score-wrong-fg) !important;
 }
 
 /* Input dentro de célula colorida herda o fundo */
@@ -655,7 +656,8 @@ body {
 .cell-correct .palpite-input,
 .cell-wrong .palpite-input {
   background: transparent !important;
-  border-color: rgba(0,0,0,.2) !important;
+  border-color: rgba(255,255,255,.3) !important;
+  color: inherit !important;
 }
 
 /* Status labels */
