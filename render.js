@@ -312,6 +312,13 @@ function _renderFooter(allGames, palpitesStore) {
   scrollWrap.appendChild(table);
   section.appendChild(scrollWrap);
   footerEl.appendChild(section);
+
+  // Espelha a tabela no painel Ranking
+  const rankingWrap = document.getElementById("ranking-table-wrap");
+  if (rankingWrap) {
+    rankingWrap.innerHTML = "";
+    rankingWrap.appendChild(section.cloneNode(true));
+  }
 }
 
 function _updateRankingBar(sorted) {
