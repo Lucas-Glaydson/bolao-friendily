@@ -1638,3 +1638,46 @@ body {
     padding: .25rem;
   }
 }
+
+/* ============================================================
+   IMPRESSÃO / PDF
+   ============================================================ */
+@media print {
+  /* Força fundo branco e texto escuro independente do tema */
+  :root, [data-theme="dark"] {
+    --bg: #fff !important;
+    --bg-alt: #f5f5f5 !important;
+    --text: #111 !important;
+    --text-muted: #444 !important;
+    --border: #ccc !important;
+    --sticky-bg: #fff !important;
+    --th-bg: #1b5e20 !important;
+    --th-text: #fff !important;
+  }
+
+  /* Oculta elementos desnecessários */
+  .site-header,
+  .filter-bar,
+  .today-section,
+  .calendar-section,
+  #api-error,
+  #api-loading,
+  .btn,
+  .ranking-bar,
+  .palpite-input,
+  .game-link { display: none !important; }
+
+  /* Exibe os palpites como texto simples */
+  .col-palpite { font-family: monospace; }
+
+  body { font-size: 10px; }
+
+  /* Quebra de página entre dias */
+  .row-group-header { page-break-before: always; }
+  .row-group-header:first-child { page-break-before: avoid; }
+
+  /* Tabela ocupa toda a largura */
+  .table-scroll { overflow: visible !important; max-height: none !important; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #ccc; padding: 3px 5px; }
+}

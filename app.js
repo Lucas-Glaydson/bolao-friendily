@@ -407,6 +407,9 @@ function _setupEventListeners() {
   // ── Exportar ──
   document.getElementById("btn-export").addEventListener("click", exportJSON);
 
+  // ── Salvar PDF ──
+  document.getElementById("btn-pdf").addEventListener("click", () => window.print());
+
   // ── Importar ──
   document.getElementById("btn-import").addEventListener("click", () => {
     document.getElementById("import-file").click();
