@@ -208,10 +208,12 @@ function _renderToday(allGames) {
       const awayFlag = getTeamFlag(g, "away", state.teamsMap);
       const homeName = getTeamName(g, "home", state.teamsMap) || g.home_team_name_en;
       const awayName = getTeamName(g, "away", state.teamsMap) || g.away_team_name_en;
+      const homeShort = homeName.length > 10 ? homeName.split(" ")[0] : homeName;
+      const awayShort = awayName.length > 10 ? awayName.split(" ")[0] : awayName;
       const homeFlagHtml = homeFlag ? `<img class="cal-flag" src="${homeFlag}" alt="${homeName}" loading="lazy">` : "";
       const awayFlagHtml = awayFlag ? `<img class="cal-flag" src="${awayFlag}" alt="${awayName}" loading="lazy">` : "";
-      const d = parseGameDate(g.local_date);
-      const hora = d ? d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }) : "";
+      // Usa o horário diretamente da string da API (já está em hora local do jogo)
+      const hora = g.local_date ? g.local_date.split(" ")[1]?.substring(0, 5) ?? "" : "";
       let scoreBadge;
       if (status === "finished") {
         scoreBadge = `<span class="today-score finished">${g.home_score} x ${g.away_score}</span>`;
@@ -221,9 +223,9 @@ function _renderToday(allGames) {
         scoreBadge = `<span class="today-score scheduled">${hora}</span>`;
       }
       return `<div class="today-game">
-        <span class="today-team">${homeFlagHtml} ${homeName}</span>
+        <span class="today-team" title="${homeName}">${homeFlagHtml} ${homeShort}</span>
         ${scoreBadge}
-        <span class="today-team">${awayFlagHtml} ${awayName}</span>
+        <span class="today-team" title="${awayName}">${awayFlagHtml} ${awayShort}</span>
       </div>`;
     }).join("");
 
