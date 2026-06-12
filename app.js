@@ -513,34 +513,29 @@ function _setupEventListeners() {
     }
   });
 
-  // ── Arrastar para rolar a tabela horizontalmente ──
-  const scroll = document.getElementById("table-scroll");
-  if (scroll) {
-    let isDragging = false;
-    let startX = 0;
-    let startScrollLeft = 0;
+  // ── Arrastar para rolar qualquer tabela horizontalmente ──
+  let _dragEl = null, _dragStartX = 0, _dragStartLeft = 0;
 
-    scroll.addEventListener("mousedown", (e) => {
-      // Ignore clicks em inputs e botões
-      if (e.target.closest("input, button, a")) return;
-      isDragging = true;
-      startX = e.pageX - scroll.offsetLeft;
-      startScrollLeft = scroll.scrollLeft;
-      scroll.classList.add("dragging");
-      e.preventDefault();
-    });
+  document.addEventListener("mousedown", (e) => {
+    const scrollEl = e.target.closest(".table-scroll");
+    if (!scrollEl || e.target.closest("input, button, a")) return;
+    _dragEl = scrollEl;
+    _dragStartX = e.pageX - scrollEl.offsetLeft;
+    _dragStartLeft = scrollEl.scrollLeft;
+    scrollEl.classList.add("dragging");
+    e.preventDefault();
+  });
 
-    document.addEventListener("mouseup", () => {
-      isDragging = false;
-      scroll.classList.remove("dragging");
-    });
+  document.addEventListener("mouseup", () => {
+    _dragEl?.classList.remove("dragging");
+    _dragEl = null;
+  });
 
-    document.addEventListener("mousemove", (e) => {
-      if (!isDragging) return;
-      const x = e.pageX - scroll.offsetLeft;
-      scroll.scrollLeft = startScrollLeft - (x - startX);
-    });
-  }
+  document.addEventListener("mousemove", (e) => {
+    if (!_dragEl) return;
+    const x = e.pageX - _dragEl.offsetLeft;
+    _dragEl.scrollLeft = _dragStartLeft - (x - _dragStartX);
+  });
 }
 
 /* ─────────────────────────────────────────────────────────
