@@ -281,10 +281,13 @@ function _renderToday(allGames) {
     </div>`;
   }
 
+  const hasLiveNow = todayGames.some((g) => getStatus(g) === "live");
+  const liveBadge = hasLiveNow ? `<span class="live-badge">🔴 AO VIVO · atualiza a cada 30s</span>` : "";
   const dateLabel = now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", timeZone: "America/Sao_Paulo" });
   el.innerHTML = `
     <div class="today-header">
       <span class="today-title">📅 Jogos de hoje — <span class="today-date">${dateLabel}</span></span>
+      ${liveBadge}
     </div>
     <div class="today-games-list">${gamesHtml}</div>
     ${rankingHtml}
@@ -808,21 +811,26 @@ function _closeScoreModal() {
 function _scheduleAutoRefresh() {
   if (state.refreshTimer) clearInterval(state.refreshTimer);
   state.refreshTimer = setInterval(async () => {
-    const hasLive = state.games.some((g) => getStatus(g) === "live");
-    if (!hasLive) return;
+    const now = new Date();
+    const todayStr = now.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+    const hasTodayGames = state.games.some((g) => {
+      const d = parseGameDate(g.local_date);
+      return d && d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) === todayStr;
+    });
+    if (!hasTodayGames) return;
     try {
       const updated = await fetchGames(true);
       state.games = updated;
       const games = _gamesWithOverrides();
+      _renderToday(games);
       atualizarCelulas(games, state.palpitesStore);
       atualizarTotais(games, state.palpitesStore);
-      _renderCalendar(games, state.calFilter);
       document.getElementById("api-status").textContent =
         `✅ ${new Date().toLocaleTimeString("pt-BR")}`;
     } catch (err) {
       console.warn("[app] Auto-refresh falhou:", err);
     }
-  }, 60_000);
+  }, 30_000);
 }
 
 /* ─────────────────────────────────────────────────────────

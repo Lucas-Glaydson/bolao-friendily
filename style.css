@@ -950,6 +950,24 @@ body {
   font-size: .95rem;
 }
 
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .72rem;
+  font-weight: 700;
+  color: #fff;
+  background: #c62828;
+  padding: .18rem .6rem;
+  border-radius: 20px;
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .55; }
+}
+
 .today-table-wrap {
   margin-top: .75rem;
 }
