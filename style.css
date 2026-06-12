@@ -831,11 +831,17 @@ body {
    ============================================================ */
 .today-section {
   margin: 12px 16px 4px;
-  background: var(--card-bg, #fff);
+  background: var(--bg);
   border: 1.5px solid var(--gold, #f5c842);
   border-radius: 12px;
   padding: 12px 16px 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+}
+
+[data-theme="dark"] .today-section {
+  background: var(--bg-alt);
+  border-color: var(--gold-dark, #f9a825);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .3);
 }
 
 .today-header {
@@ -871,8 +877,8 @@ body {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background: var(--bg, #f7f9fb);
-  border: 1px solid var(--border, #e0e0e0);
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 6px 10px;
   font-size: .82rem;
@@ -880,8 +886,8 @@ body {
 }
 
 [data-theme="dark"] .today-game {
-  background: rgba(255, 255, 255, .06);
-  border-color: rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .05);
+  border-color: rgba(255, 255, 255, .1);
 }
 
 .today-team {
@@ -945,49 +951,72 @@ body {
 }
 
 .today-ranking {
-  border-top: 1px solid var(--border, #e0e0e0);
-  padding-top: 8px;
-  margin-top: 4px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  margin-top: 8px;
 }
 
 [data-theme="dark"] .today-ranking {
-  border-color: rgba(255, 255, 255, .12);
+  border-color: rgba(255, 255, 255, .1);
 }
 
 .today-ranking-title {
-  font-size: .8rem;
+  display: block;
+  font-size: .72rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .06em;
-  opacity: .65;
-  margin-right: 8px;
+  letter-spacing: .07em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
 }
 
 .today-ranking-list {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 6px;
 }
 
 .today-rank-item {
-  font-size: .8rem;
-  padding: 3px 9px;
-  border-radius: 20px;
-  background: var(--bg, #f0f0f0);
-  border: 1px solid var(--border, #ddd);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .82rem;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: transform .1s;
+}
+
+.today-rank-item:hover {
+  transform: translateY(-1px);
 }
 
 [data-theme="dark"] .today-rank-item {
-  background: rgba(255, 255, 255, .07);
-  border-color: rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .05);
+  border-color: rgba(255, 255, 255, .1);
 }
 
-.today-rank-item.top {
-  background: var(--gold, #f5c842);
-  color: #1a1a1a;
+.today-rank-item.pos-1 {
+  background: linear-gradient(135deg, #ffd700, #ffb300);
+  color: #1b1b1b;
   border-color: transparent;
-  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(255, 193, 7, .35);
+  font-size: .86rem;
+}
+
+.today-rank-item.pos-2 {
+  background: linear-gradient(135deg, #e8e8e8, #bdbdbd);
+  color: #1b1b1b;
+  border-color: transparent;
+}
+
+.today-rank-item.pos-3 {
+  background: linear-gradient(135deg, #d4924a, #b5651d);
+  color: #fff;
+  border-color: transparent;
 }
 
 /* ============================================================

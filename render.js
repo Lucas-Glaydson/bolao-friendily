@@ -217,6 +217,13 @@ function _formatDayLabel(dayKey) {
   return dt.toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
 }
 
+/** Formata "YYYY-MM-DD" → "12 de junho de 2026" (com ano). */
+function _formatDayLabelFull(dayKey) {
+  const [y, m, d] = dayKey.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+}
+
 /* ─────────────────────────────────────────────────────────
    DAY HEADER ROW
    ───────────────────────────────────────────────────────── */
@@ -228,6 +235,7 @@ function _makeDayHeaderRow(dayNum, dayKey) {
   const th = document.createElement("th");
   th.colSpan = 2;
   th.textContent = `📅  DIA ${dayNum}  —  ${_formatDayLabel(dayKey)}`;
+  th.title = _formatDayLabelFull(dayKey);
   th.scope = "rowgroup";
   tr.appendChild(th);
 

@@ -259,9 +259,10 @@ function _renderToday(allGames) {
     rankingHtml = `<div class="today-ranking">
       <span class="today-ranking-title">📊 Ranking do dia</span>
       <div class="today-ranking-list">`
-      + sortedDay.map(([amigo, pts], i) =>
-        `<span class="today-rank-item${i < 3 ? " top" : ""}">${i < 3 ? MEDALS[i] : `#${i + 1}`} ${amigo} <b>${pts}pt</b></span>`
-      ).join("")
+      + sortedDay.map(([amigo, pts], i) => {
+        const cls = i === 0 ? " top pos-1" : i === 1 ? " top pos-2" : i === 2 ? " top pos-3" : "";
+        return `<span class="today-rank-item${cls}">${i < 3 ? MEDALS[i] : `#${i + 1}`} ${amigo} <b>${pts}pt</b></span>`;
+      }).join("")
       + `</div></div>`;
   }
 
