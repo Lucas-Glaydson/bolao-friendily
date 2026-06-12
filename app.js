@@ -784,7 +784,8 @@ function _updateAdminUI() {
 
 function _restoreTheme() {
   const saved = localStorage.getItem("bolao_theme");
-  if (saved === "dark") {
+  const isDark = saved === "dark" || saved === null; // dark é o padrão
+  if (isDark) {
     document.documentElement.dataset.theme = "dark";
     document.getElementById("btn-dark-mode").textContent = "☀️";
   }
