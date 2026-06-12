@@ -256,14 +256,24 @@ function _renderToday(allGames) {
   // ── Monta HTML do ranking diário ──
   let rankingHtml = "";
   if (anyFinished) {
+    const top3 = sortedDay.slice(0, 3);
+    const rest = sortedDay.slice(3);
+    const POD_COLORS = ["pos-1", "pos-2", "pos-3"];
+    const top3Html = top3.map(([amigo, pts], i) =>
+      `<div class="today-podium-card ${POD_COLORS[i]}">
+        <span class="podium-medal">${MEDALS[i]}</span>
+        <span class="podium-name">${amigo}</span>
+        <span class="podium-pts">${pts}pt</span>
+      </div>`
+    ).join("");
+    const restHtml = rest.map(([amigo, pts], i) =>
+      `<span class="today-rank-item">#${i + 4} ${amigo} <b>${pts}pt</b></span>`
+    ).join("");
     rankingHtml = `<div class="today-ranking">
-      <span class="today-ranking-title">📊 Ranking do dia</span>
-      <div class="today-ranking-list">`
-      + sortedDay.map(([amigo, pts], i) => {
-        const cls = i === 0 ? " top pos-1" : i === 1 ? " top pos-2" : i === 2 ? " top pos-3" : "";
-        return `<span class="today-rank-item${cls}">${i < 3 ? MEDALS[i] : `#${i + 1}`} ${amigo} <b>${pts}pt</b></span>`;
-      }).join("")
-      + `</div></div>`;
+      <span class="today-ranking-title">🏆 Top 3 do dia</span>
+      <div class="today-podium">${top3Html}</div>
+      ${rest.length ? `<div class="today-ranking-list">${restHtml}</div>` : ""}
+    </div>`;
   }
 
   const dateLabel = now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", timeZone: "America/Sao_Paulo" });
