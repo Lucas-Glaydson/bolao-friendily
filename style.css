@@ -1248,12 +1248,13 @@ body {
    ============================================================ */
 .view-carousel {
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: clip;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  display: flex;        /* panels sit side-by-side */
+  display: flex;
+  align-items: flex-start;
 }
 
 .view-carousel::-webkit-scrollbar {
@@ -1266,7 +1267,6 @@ body {
   scroll-snap-align: start;
   box-sizing: border-box;
   padding: 0 0 1rem;
-  min-height: 40vh;
 }
 
 /* ============================================================
