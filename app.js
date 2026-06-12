@@ -159,6 +159,23 @@ function _renderAll() {
    SEÇÃO: JOGOS DE HOJE + RANKING DIÁRIO
    ───────────────────────────────────────────────────────── */
 
+/**
+ * Retorna quantas horas somar ao horário local do estádio para obter BRT (UTC-3).
+ * A API envia os horários no fuso local de cada cidade-sede.
+ * Eastern (EDT) = UTC-4 → BRT +1
+ * Central US (CDT) = UTC-5 → BRT +2
+ * Central MX = UTC-6 → BRT +3 (México aboliu DST em 2023)
+ * Western (PDT) = UTC-7 → BRT +4
+ */
+function _stadiumToBrtOffset(stadiumId) {
+  const s = state.stadiumsMap.get(String(stadiumId));
+  if (!s) return 0;
+  if (s.region === "Eastern") return 1;
+  if (s.region === "Western") return 4;
+  if (s.region === "Central") return s.country_en === "Mexico" ? 3 : 2;
+  return 0;
+}
+
 function _renderToday(allGames) {
   const el = document.getElementById("today-section");
   if (!el) return;
@@ -212,8 +229,15 @@ function _renderToday(allGames) {
       const awayShort = awayName.length > 10 ? awayName.split(" ")[0] : awayName;
       const homeFlagHtml = homeFlag ? `<img class="cal-flag" src="${homeFlag}" alt="${homeName}" loading="lazy">` : "";
       const awayFlagHtml = awayFlag ? `<img class="cal-flag" src="${awayFlag}" alt="${awayName}" loading="lazy">` : "";
-      // Usa o horário diretamente da string da API (já está em hora local do jogo)
-      const hora = g.local_date ? g.local_date.split(" ")[1]?.substring(0, 5) ?? "" : "";
+      // Converte horário local do estádio para BRT
+      const rawTime = g.local_date ? g.local_date.split(" ")[1] : null;
+      let hora = rawTime ?? "";
+      if (rawTime) {
+        const [hh, mm] = rawTime.split(":").map(Number);
+        const offset = _stadiumToBrtOffset(g.stadium_id);
+        const brtH = (hh + offset) % 24;
+        hora = `${String(brtH).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+      }
       let scoreBadge;
       if (status === "finished") {
         scoreBadge = `<span class="today-score finished">${g.home_score} x ${g.away_score}</span>`;
