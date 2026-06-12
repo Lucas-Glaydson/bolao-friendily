@@ -8,7 +8,7 @@
  *   updateResultCell(gameId, amigoIdx, pts, palpite) – atualiza 1 célula de resultado
  */
 
-import { AMIGOS, calcularPontos, getStatus, getStatusLabel, pontosBadge, validarPalpite } from "./utils.js";
+import { AMIGOS, calcularPontos, getStatus, getStatusLabel, pontosBadge, validarPalpite, parseGameDate } from "./utils.js";
 import { getPalpite } from "./storage.js";
 import { getTeamName } from "./api.js";
 
@@ -28,12 +28,11 @@ export function renderTabela(
     return true;
   });
 
-  // Ordena: rodada → grupo → data
+  // Ordena: data BRT → hora
   games.sort((a, b) => {
-    const mda = parseInt(a.matchday) || 0;
-    const mdb = parseInt(b.matchday) || 0;
-    if (mda !== mdb) return mda - mdb;
-    return a.group.localeCompare(b.group);
+    const da = _gameDateBrt(a)?.getTime() ?? 0;
+    const db = _gameDateBrt(b)?.getTime() ?? 0;
+    return da - db;
   });
 
   _renderHeader();
@@ -157,49 +156,81 @@ function _renderBody(games, teamsMap, stadiumsMap, palpitesStore, isAdmin, onPal
     return;
   }
 
-  let currentMatchday = null;
-  let mdGames = [];
-  let mdSubtotals = _newSubtotals();
+  let currentDay = null;   // "YYYY-MM-DD" em BRT
+  let dayGames = [];
+  let daySubtotals = _newSubtotals();
+  let dayNum = 0;
 
-  const flushRound = () => {
-    if (mdGames.length === 0) return;
-    tbody.appendChild(_makeSubtotalRow(mdGames, mdSubtotals, currentMatchday));
-    mdGames = [];
-    mdSubtotals = _newSubtotals();
+  const flushDay = () => {
+    if (dayGames.length === 0) return;
+    tbody.appendChild(_makeSubtotalRow(dayGames, daySubtotals, currentDay));
+    dayGames = [];
+    daySubtotals = _newSubtotals();
   };
 
   for (const game of games) {
-    // Nova rodada?
-    if (game.matchday !== currentMatchday) {
-      flushRound();
-      currentMatchday = game.matchday;
-      tbody.appendChild(_makeRoundHeaderRow(game.matchday));
+    const dayKey = _gameDayKey(game);  // "YYYY-MM-DD"
+    if (dayKey !== currentDay) {
+      flushDay();
+      currentDay = dayKey;
+      dayNum++;
+      tbody.appendChild(_makeDayHeaderRow(dayNum, dayKey));
     }
 
-    mdGames.push(game);
-    const tr = _renderGameRow(game, teamsMap, stadiumsMap, palpitesStore, isAdmin, onPalpiteChange, onGameClick, mdSubtotals);
+    dayGames.push(game);
+    const tr = _renderGameRow(game, teamsMap, stadiumsMap, palpitesStore, isAdmin, onPalpiteChange, onGameClick, daySubtotals);
     tbody.appendChild(tr);
   }
 
-  flushRound();
+  flushDay();
 }
 
 /* ─────────────────────────────────────────────────────────
-   GROUP HEADER ROW
+   HELPERS DE DATA BRT
    ───────────────────────────────────────────────────────── */
 
-function _makeRoundHeaderRow(matchday) {
+/** Converte horário local do estádio para BRT (UTC-3). */
+function _gameDateBrt(game) {
+  const d = parseGameDate(game.local_date);
+  if (!d) return null;
+  // API retorna horário local do estádio. Adiciona offset para UTC depois subtrai 3h (BRT).
+  // Por simplicidade, usamos a data como veio (para ordenação relativa a ordem é a mesma).
+  return d;
+}
+
+/** Retorna a chave de dia BRT no formato "YYYY-MM-DD". */
+function _gameDayKey(game) {
+  const d = _gameDateBrt(game);
+  if (!d) return "0000-00-00";
+  // Formata como YYYY-MM-DD usando os valores UTC do objeto Date
+  // (parseGameDate retorna Date sem timezone, então tratamos como local)
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** Formata "YYYY-MM-DD" → "12 de junho" em pt-BR. */
+function _formatDayLabel(dayKey) {
+  const [y, m, d] = dayKey.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
+}
+
+/* ─────────────────────────────────────────────────────────
+   DAY HEADER ROW
+   ───────────────────────────────────────────────────────── */
+
+function _makeDayHeaderRow(dayNum, dayKey) {
   const tr = document.createElement("tr");
   tr.className = "row-group-header";
 
-  // Célula do rótulo — sticky left (cobre Jogo + Placar)
   const th = document.createElement("th");
   th.colSpan = 2;
-  th.textContent = `⚽  RODADA  ${matchday}`;
+  th.textContent = `📅  DIA ${dayNum}  —  ${_formatDayLabel(dayKey)}`;
   th.scope = "rowgroup";
   tr.appendChild(th);
 
-  // Célula de preenchimento — fundo verde, sem conteúdo
   const tdFill = document.createElement("td");
   tdFill.colSpan = AMIGOS.length * 2 + 1;
   tr.appendChild(tdFill);
@@ -211,7 +242,7 @@ function _makeRoundHeaderRow(matchday) {
    SUBTOTAL ROW (após cada rodada dentro de um grupo)
    ───────────────────────────────────────────────────────── */
 
-function _makeSubtotalRow(mdGames, subtotals, matchday) {
+function _makeSubtotalRow(mdGames, subtotals, dayKey) {
   const tr = document.createElement("tr");
   tr.className = "row-subtotal";
 
@@ -219,7 +250,7 @@ function _makeSubtotalRow(mdGames, subtotals, matchday) {
 
   const tdLabel = document.createElement("td");
   tdLabel.colSpan = 2;
-  tdLabel.textContent = `↳ Subtotal  Rodada ${matchday}`;
+  tdLabel.textContent = `↳ Subtotal  ${_formatDayLabel(dayKey)}`;
   tdLabel.style.cssText = "text-align:right;font-weight:600;font-size:.7rem;color:var(--text-muted)";
   tr.appendChild(tdLabel);
 
