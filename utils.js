@@ -9,7 +9,7 @@
 export const AMIGOS = [
   "Lucas", "Alefe", "Caetano", "Evelin", "Ingrid",
   "Rafael", "Valdemir", "Mauro", "Anderson", "AdilsonJR",
-  "Felipe", "Miguel", "Bruno", "Emmanuel", "Zaine",
+  "Felipe", "Miguel", "Bruno", "Emmanuel", "Zaine", "Paulo",
 ];
 
 /* ─────────────────────────────────────────────────────────
