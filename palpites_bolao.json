@@ -97,7 +97,7 @@
       "Rafael": "0 x 3",
       "Evelin": "2 x 0",
       "Alefe": "2 x 2",
-      "Bruno": "0 x 2",
+      "Bruno": "0 x 1",
       "AdilsonJR": "0 x 2",
       "Anderson": "0 x 1",
       "Zaine": "1 x 3",
@@ -149,8 +149,8 @@
       "Emmanuel": "2 x 2",
       "Rafael": "2 x 1",
       "Evelin": "2 x 2",
-      "Alefe": "1 x 0",
-      "Bruno": "1 x 2",
+      "Alefe": "2 x 0",
+      "Bruno": "1 x 0",
       "AdilsonJR": "1 x 2",
       "Anderson": "1 x 1",
       "Miguel": "1 x 2",
@@ -170,8 +170,8 @@
       "Alefe": "4 x 0",
       "Bruno": "4 x 0",
       "AdilsonJR": "3 x 0",
-      "Anderson": "2 x 0",
-      "Zaine": "4 x 0",
+      "Anderson": "3 x 0",
+      "Zaine": "2 x 0",
       "Miguel": "3 x 1",
       "Lucas": "4 x 0",
       "Paulo": "4 x 0"
@@ -221,11 +221,11 @@
       "Emmanuel": "1 x 1",
       "Rafael": "1 x 1",
       "Evelin": "1 x 0",
-      "Bruno": "1 x 1",
+      "Bruno": "1 x 0",
       "AdilsonJR": "1 x 1",
       "Alefe": "2 x 0",
       "Anderson": "1 x 1",
-      "Zaine": "2 x 0",
+      "Zaine": "1 x 0",
       "Lucas": "2 x 1",
       "Miguel": "3 x 1",
       "Paulo": "2 x 1"
@@ -256,7 +256,7 @@
       "Caetano": "2 x 1",
       "Emmanuel": "2 x 0",
       "Rafael": "3 x 1",
-      "Evelin": "3 x 2",
+      "Evelin": "3 x 1",
       "Alefe": "2 x 0",
       "Bruno": "3 x 1",
       "AdilsonJR": "2 x 1",
@@ -279,7 +279,7 @@
       "Bruno": "1 x 2",
       "AdilsonJR": "0 x 2",
       "Anderson": "0 x 2",
-      "Zaine": "0 x 1",
+      "Zaine": "0 x 2",
       "Lucas": "0 x 2",
       "Miguel": "0 x 2",
       "Paulo": "0 x 3"
@@ -297,7 +297,7 @@
       "Bruno": "2 x 1",
       "AdilsonJR": "3 x 1",
       "Anderson": "3 x 0",
-      "Zaine": "3 x 0",
+      "Zaine": "3 x 1",
       "Miguel": "3 x 0",
       "Lucas": "2 x 0",
       "Paulo": "3 x 1"
@@ -332,7 +332,7 @@
       "Bruno": "2 x 0",
       "AdilsonJR": "3 x 0",
       "Anderson": "2 x 0",
-      "Zaine": "3 x 0",
+      "Zaine": "2 x 0",
       "Miguel": "1 x 0",
       "Lucas": "1 x 0",
       "Rafael": "2 x 1",
@@ -351,8 +351,8 @@
       "Bruno": "2 x 0",
       "AdilsonJR": "1 x 1",
       "Anderson": "1 x 1",
-      "Zaine": "1 x 0",
-      "Lucas": "2 x 0",
+      "Zaine": "1 x 1",
+      "Lucas": "2 x 1",
       "Miguel": "1 x 0",
       "Paulo": "2 x 0"
     },
@@ -371,10 +371,11 @@
       "Anderson": "2 x 0",
       "Zaine": "3 x 0",
       "Miguel": "3 x 0",
-      "Lucas": "3 x 0"
+      "Lucas": "3 x 0",
+      "Paulo": "2 x 0"
     },
     "22": {
-      "Valdemir": "3 x 3",
+      "Valdemir": "2 x 3",
       "Felipe": "2 x 1",
       "Ingrid": "2 x 2",
       "Mauro": "2 x 2",
@@ -386,8 +387,10 @@
       "Bruno": "3 x 2",
       "AdilsonJR": "2 x 2",
       "Anderson": "1 x 1",
-      "Zaine": "2 x 0",
-      "Lucas": "2 x 1"
+      "Zaine": "2 x 1",
+      "Lucas": "2 x 2",
+      "Miguel": "3 x 3",
+      "Paulo": "2 x 2"
     },
     "23": {
       "Valdemir": "1 x 2",
@@ -403,7 +406,9 @@
       "AdilsonJR": "0 x 2",
       "Anderson": "0 x 2",
       "Zaine": "0 x 2",
-      "Lucas": "0 x 2"
+      "Lucas": "0 x 2",
+      "Miguel": "1 x 2",
+      "Paulo": "0 x 3"
     },
     "24": {
       "Valdemir": "2 x 3",
@@ -418,8 +423,10 @@
       "Bruno": "2 x 0",
       "AdilsonJR": "1 x 2",
       "Anderson": "0 x 1",
-      "Zaine": "2 x 0",
-      "Lucas": "1 x 0"
+      "Zaine": "1 x 3",
+      "Lucas": "1 x 2",
+      "Miguel": "1 x 2",
+      "Paulo": "2 x 1"
     },
     "25": {
       "Valdemir": "1 x 2",
@@ -434,21 +441,28 @@
       "Bruno": "1 x 0",
       "AdilsonJR": "2 x 2",
       "Anderson": "2 x 1",
-      "Lucas": "0 x 1"
+      "Lucas": "0 x 1",
+      "Miguel": "1 x 0",
+      "Zaine": "2 x 0",
+      "Paulo": "2 x 1"
     },
     "26": {
       "Valdemir": "2 x 0",
       "Felipe": "2 x 0",
-      "Ingrid": "2 x 2",
+      "Ingrid": "3 x 2",
       "Mauro": "2 x 2",
       "Caetano": "1 x 1",
       "Emmanuel": "1 x 0",
       "Rafael": "2 x 1",
       "Evelin": "2 x 0",
-      "Alefe": "2 x 0",
-      "Bruno": "1 x 0",
+      "Alefe": "0 x 1",
+      "Bruno": "1 x 1",
       "AdilsonJR": "2 x 0",
-      "Anderson": "2 x 1"
+      "Anderson": "2 x 1",
+      "Miguel": "2 x 1",
+      "Lucas": "1 x 0",
+      "Zaine": "2 x 0",
+      "Paulo": "1 x 1"
     },
     "27": {
       "Valdemir": "2 x 1",
@@ -461,10 +475,12 @@
       "Evelin": "2 x 0",
       "Alefe": "1 x 1",
       "Bruno": "2 x 1",
-      "AdilsonJR": "1 x 0",
+      "AdilsonJR": "1 x 1",
       "Anderson": "1 x 0",
-      "Miguel": "3 x 1",
-      "Lucas": "2 x 1"
+      "Miguel": "3 x 2",
+      "Lucas": "2 x 1",
+      "Zaine": "1 x 0",
+      "Paulo": "3 x 0"
     },
     "28": {
       "Valdemir": "2 x 1",
@@ -476,11 +492,13 @@
       "Rafael": "3 x 0",
       "Evelin": "1 x 2",
       "Alefe": "0 x 1",
-      "Bruno": "2 x 0",
+      "Bruno": "1 x 0",
       "AdilsonJR": "1 x 0",
       "Anderson": "0 x 2",
       "Zaine": "0 x 1",
-      "Lucas": "0 x 2"
+      "Lucas": "0 x 2",
+      "Miguel": "1 x 2",
+      "Paulo": "2 x 0"
     },
     "29": {
       "Valdemir": "3 x 1",
@@ -491,12 +509,14 @@
       "Emmanuel": "6 x 0",
       "Rafael": "3 x 0",
       "Evelin": "4 x 1",
-      "Alefe": "3 x 0",
+      "Alefe": "4 x 1",
       "Bruno": "4 x 1",
-      "AdilsonJR": "2 x 1",
+      "AdilsonJR": "1 x 0",
       "Anderson": "3 x 0",
       "Miguel": "3 x 1",
-      "Lucas": "2 x 0"
+      "Lucas": "2 x 0",
+      "Zaine": "4 x 1",
+      "Paulo": "2 x 0"
     },
     "30": {
       "Valdemir": "0 x 2",
@@ -508,10 +528,13 @@
       "Rafael": "2 x 1",
       "Evelin": "1 x 3",
       "Alefe": "0 x 2",
-      "Bruno": "1 x 2",
+      "Bruno": "1 x 1",
       "AdilsonJR": "0 x 2",
       "Anderson": "1 x 2",
-      "Lucas": "1 x 2"
+      "Lucas": "1 x 2",
+      "Miguel": "1 x 2",
+      "Zaine": "0 x 3",
+      "Paulo": "1 x 3"
     },
     "31": {
       "Valdemir": "3 x 1",
@@ -522,12 +545,14 @@
       "Emmanuel": "1 x 0",
       "Rafael": "2 x 0",
       "Evelin": "1 x 1",
-      "Alefe": "2 x 1",
+      "Alefe": "0 x 1",
       "Bruno": "2 x 1",
       "AdilsonJR": "1 x 0",
       "Anderson": "2 x 1",
       "Miguel": "1 x 0",
-      "Lucas": "1 x 0"
+      "Lucas": "1 x 0",
+      "Zaine": "1 x 0",
+      "Paulo": "2 x 0"
     },
     "32": {
       "Valdemir": "2 x 1",
