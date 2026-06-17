@@ -16,6 +16,7 @@ import {
 } from "./utils.js";
 import {
   renderTabela, atualizarCelulas, atualizarTotais, updateResultCell, renderDaySection, renderPessoasCards,
+  renderRankingPersonTables,
 } from "./render.js";
 
 /* ─────────────────────────────────────────────────────────
@@ -30,6 +31,7 @@ const state = {
   overrides: {},                // placares inseridos manualmente
   calFilter: "all",            // filtro ativo no calendário
   viewMode: "cards",           // "cards" | "table"
+  rankingGroupBy: "day",       // "day" | "group" | "team" - agrupamento das tabelas por pessoa no ranking
   filters: { group: "", round: "", status: "", person: "", team: "", date: "" },
   refreshTimer: null,
 };
@@ -156,6 +158,13 @@ function _renderAll() {
 
   _updateAdminUI();
   _renderCalendar(games, state.calFilter);
+
+  // Renderiza tabelas por pessoa no painel de ranking
+  renderRankingPersonTables(
+    state.games, state.teamsMap, state.stadiumsMap,
+    state.palpitesStore, state.rankingGroupBy,
+    isAuthenticated(), _handlePalpiteChange, _handleGameClick
+  );
 
   // Restaura foco
   if (focusGameId && focusAmigo) {
@@ -481,6 +490,16 @@ function _setupEventListeners() {
   document.getElementById("filter-date").addEventListener("change", (e) => {
     state.filters.date = e.target.value;
     _renderAll();
+  });
+
+  // ── Agrupamento de tabelas por pessoa no ranking ──
+  document.getElementById("ranking-groupby")?.addEventListener("change", (e) => {
+    state.rankingGroupBy = e.target.value;
+    renderRankingPersonTables(
+      state.games, state.teamsMap, state.stadiumsMap,
+      state.palpitesStore, state.rankingGroupBy,
+      isAuthenticated(), _handlePalpiteChange, _handleGameClick
+    );
   });
 
   // ── Tabs / Carrossel ──

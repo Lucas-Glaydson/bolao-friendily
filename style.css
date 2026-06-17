@@ -2284,3 +2284,275 @@ body {
     display: none;
   }
 }
+
+/* ============================================================
+   TABELAS POR PESSOA NO RANKING
+   ============================================================ */
+
+.ranking-person-tables {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.person-section {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+  transition: all .2s;
+}
+
+.person-section:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+}
+
+.person-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--table-header-bg);
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.person-medal {
+  font-size: 1.5rem;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.person-name {
+  flex: 1;
+  font-size: 1.15rem;
+}
+
+.person-total-pts {
+  font-size: 1rem;
+  color: var(--accent);
+  background: var(--accent-bg);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+}
+
+/* Destaque para top 3 */
+.person-section.person-rank-top1 {
+  border-color: #FFD700;
+  background: linear-gradient(135deg, rgba(255, 215, 0, .05), var(--card-bg));
+}
+
+.person-section.person-rank-top2 {
+  border-color: #C0C0C0;
+  background: linear-gradient(135deg, rgba(192, 192, 192, .05), var(--card-bg));
+}
+
+.person-section.person-rank-top3 {
+  border-color: #CD7F32;
+  background: linear-gradient(135deg, rgba(205, 127, 50, .05), var(--card-bg));
+}
+
+.person-group {
+  margin-bottom: 1rem;
+}
+
+.person-group:last-child {
+  margin-bottom: 0;
+}
+
+.person-group-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.person-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background: var(--bg);
+}
+
+.person-table thead {
+  background: var(--table-header-bg);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.person-table th {
+  padding: 0.6rem 0.5rem;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+
+.person-table tbody tr {
+  border-bottom: 1px solid var(--border-light);
+  transition: background .15s;
+}
+
+.person-table tbody tr:hover {
+  background: var(--hover-bg);
+}
+
+.person-table td {
+  padding: 0.5rem;
+  vertical-align: middle;
+}
+
+.person-table .col-jogo {
+  min-width: 100px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.person-table .col-jogo:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.person-table .col-data {
+  min-width: 70px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.person-table .col-oficial {
+  min-width: 80px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.person-table .col-oficial.oficial-finished {
+  color: var(--success);
+}
+
+.person-table .col-oficial.oficial-live {
+  color: var(--live);
+  animation: cell-live-pulse 2s ease-in-out infinite;
+}
+
+.person-table .col-oficial.oficial-scheduled {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.person-table .col-palpite-person {
+  min-width: 60px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.person-table .col-pts {
+  min-width: 50px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.person-table .pts-provisional {
+  opacity: 0.7;
+  animation: cell-live-pulse 2s ease-in-out infinite;
+}
+
+.person-table tfoot {
+  background: var(--table-header-bg);
+  font-weight: 700;
+}
+
+.person-table tfoot td {
+  padding: 0.7rem 0.5rem;
+  border-top: 2px solid var(--border);
+}
+
+/* Controle de agrupamento */
+.ranking-groupby-control {
+  background: var(--card-bg);
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+}
+
+.ranking-groupby-control label {
+  color: var(--text);
+}
+
+.ranking-groupby-control select {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .person-section-header {
+    font-size: 1rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .person-name {
+    font-size: 1rem;
+  }
+
+  .person-table {
+    font-size: 0.75rem;
+  }
+
+  .person-table th,
+  .person-table td {
+    padding: 0.4rem 0.3rem;
+  }
+
+  .person-group-label {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .ranking-person-tables {
+    padding: 0.5rem;
+  }
+
+  .person-section {
+    padding: 0.75rem;
+  }
+
+  .person-section-header {
+    font-size: 0.9rem;
+    padding: 0.5rem;
+  }
+
+  .person-medal {
+    font-size: 1.2rem;
+    min-width: 1.5rem;
+  }
+
+  .person-name {
+    font-size: 0.9rem;
+  }
+
+  .person-total-pts {
+    font-size: 0.85rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .person-table {
+    font-size: 0.7rem;
+  }
+
+  /* Oculta coluna de data em mobile para economizar espaço */
+  .person-table .col-data {
+    display: none;
+  }
+}

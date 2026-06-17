@@ -595,3 +595,285 @@ export function renderPessoasCards(
   _renderFooter(allGames, palpitesStore);
 }
 
+/* ─────────────────────────────────────────────────────────
+   VIEW: TABELAS POR PESSOA NO RANKING
+   ───────────────────────────────────────────────────────── */
+
+/**
+ * Renderiza tabelas de jogos organizadas por pessoa (por ranking),
+ * com agrupamento configurável (dia, grupo ou time).
+ */
+export function renderRankingPersonTables(
+  allGames, teamsMap, stadiumsMap, palpitesStore,
+  groupBy = "day", isAdmin, onPalpiteChange, onGameClick
+) {
+  const container = document.getElementById("ranking-person-tables");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  // Calcula ranking geral
+  const totals = _newSubtotals();
+  for (const game of allGames) {
+    if (game.finished !== "TRUE") continue;
+    const oficial = `${game.home_score} x ${game.away_score}`;
+    for (const amigo of AMIGOS) {
+      const pts = calcularPontos(getPalpite(game.id, amigo, palpitesStore), oficial);
+      if (pts !== null) totals[amigo] += pts;
+    }
+  }
+
+  const sorted = Object.entries(totals).sort(([, a], [, b]) => b - a);
+  const MEDALS = ["\ud83e\udd47", "\ud83e\udd48", "\ud83e\udd49"];
+
+  // Para cada pessoa no ranking, cria uma seção com seus jogos agrupados
+  for (const [idx, [amigo, totalPts]] of sorted.entries()) {
+    const rank = idx + 1;
+    const medal = rank <= 3 ? MEDALS[rank - 1] : `#${rank}`;
+    const rankClass = rank <= 3 ? ` person-rank-top${rank}` : "";
+
+    const personSection = document.createElement("section");
+    personSection.className = `person-section${rankClass}`;
+    personSection.dataset.amigo = amigo;
+
+    // Cabeçalho da pessoa
+    const header = document.createElement("div");
+    header.className = "person-section-header";
+    header.innerHTML = `
+      <span class="person-medal">${medal}</span>
+      <span class="person-name">${amigo}</span>
+      <span class="person-total-pts">${totalPts} pts</span>
+    `;
+    personSection.appendChild(header);
+
+    // Agrupa jogos por critério selecionado
+    const groups = _groupGames(allGames, groupBy, teamsMap);
+
+    for (const [groupKey, groupGames] of groups) {
+      if (groupGames.length === 0) continue;
+
+      const groupDiv = document.createElement("div");
+      groupDiv.className = "person-group";
+
+      const groupLabel = document.createElement("div");
+      groupLabel.className = "person-group-label";
+      groupLabel.textContent = _formatGroupLabel(groupKey, groupBy);
+      groupDiv.appendChild(groupLabel);
+
+      const scrollWrap = document.createElement("div");
+      scrollWrap.className = "table-scroll";
+
+      const table = document.createElement("table");
+      table.className = "person-table";
+
+      // Cabeçalho da tabela
+      const thead = document.createElement("thead");
+      const trHead = document.createElement("tr");
+
+      const thJogo = document.createElement("th");
+      thJogo.textContent = "Jogo";
+      thJogo.className = "col-jogo";
+      trHead.appendChild(thJogo);
+
+      const thData = document.createElement("th");
+      thData.textContent = "Data/Hora";
+      thData.className = "col-data";
+      trHead.appendChild(thData);
+
+      const thOficial = document.createElement("th");
+      thOficial.textContent = "Resultado";
+      thOficial.className = "col-oficial";
+      trHead.appendChild(thOficial);
+
+      const thPalpite = document.createElement("th");
+      thPalpite.textContent = "Palpite";
+      thPalpite.className = "col-palpite-person";
+      trHead.appendChild(thPalpite);
+
+      const thPts = document.createElement("th");
+      thPts.textContent = "Pts";
+      thPts.className = "col-pts";
+      trHead.appendChild(thPts);
+
+      thead.appendChild(trHead);
+      table.appendChild(thead);
+
+      // Corpo da tabela
+      const tbody = document.createElement("tbody");
+      let groupPts = 0;
+
+      for (const game of groupGames) {
+        const tr = document.createElement("tr");
+
+        const homeName = getTeamName(game, "home", teamsMap);
+        const awayName = getTeamName(game, "away", teamsMap);
+        const status = getStatus(game);
+        const oficialPlacar = game.finished === "TRUE" ? `${game.home_score} x ${game.away_score}` : null;
+        const livePlacar = status === "live" && game.home_score != null ? `${game.home_score} x ${game.away_score}` : null;
+
+        const palpite = getPalpite(game.id, amigo, palpitesStore);
+        const pts = calcularPontos(palpite, oficialPlacar);
+        const ptsProvisorio = pts !== null ? pts : calcularPontos(palpite, livePlacar);
+
+        if (pts !== null) groupPts += pts;
+        else if (ptsProvisorio !== null) groupPts += ptsProvisorio;
+
+        // Coluna: Jogo
+        const tdJogo = document.createElement("td");
+        tdJogo.className = "col-jogo";
+        tdJogo.textContent = `${_abbrev(homeName)} × ${_abbrev(awayName)}`;
+        tdJogo.title = `${homeName} × ${awayName}`;
+        tdJogo.style.cursor = "pointer";
+        tdJogo.addEventListener("click", () => onGameClick(game, homeName, awayName, teamsMap, stadiumsMap));
+        tr.appendChild(tdJogo);
+
+        // Coluna: Data/Hora
+        const tdData = document.createElement("td");
+        tdData.className = "col-data";
+        const rawTime = game.local_date?.split(" ")[1];
+        const timeStr = rawTime ? _timeToBrt(rawTime, game.stadium_id, stadiumsMap) : "--";
+        tdData.textContent = timeStr;
+        tr.appendChild(tdData);
+
+        // Coluna: Resultado Oficial
+        const tdOficial = document.createElement("td");
+        tdOficial.className = "col-oficial";
+        if (oficialPlacar) {
+          tdOficial.textContent = `✅ ${oficialPlacar}`;
+          tdOficial.classList.add("oficial-finished");
+        } else if (status === "live") {
+          tdOficial.textContent = `🔴 ${game.home_score ?? 0}×${game.away_score ?? 0}`;
+          tdOficial.classList.add("oficial-live");
+        } else {
+          tdOficial.textContent = "⏳";
+          tdOficial.classList.add("oficial-scheduled");
+        }
+        tr.appendChild(tdOficial);
+
+        // Coluna: Palpite
+        const tdPalpite = document.createElement("td");
+        tdPalpite.className = "col-palpite-person";
+        tdPalpite.dataset.gameId = String(game.id);
+        tdPalpite.dataset.amigo = amigo;
+
+        if (status === "live" && pts === null) tdPalpite.classList.add("cell-provisional");
+        _applyPalpiteColor(tdPalpite, ptsProvisorio);
+
+        if (isAdmin) {
+          const input = document.createElement("input");
+          input.type = "text";
+          input.className = "palpite-input" + (palpite ? " valid" : "");
+          input.value = palpite || "";
+          input.placeholder = "0x0";
+          input.maxLength = 7;
+          input.dataset.gameId = String(game.id);
+          input.dataset.amigo = amigo;
+          input.dataset.amigoIdx = String(AMIGOS.indexOf(amigo));
+          input.setAttribute("aria-label", `Palpite de ${amigo}`);
+          input.addEventListener("input", e => {
+            const val = e.target.value.trim();
+            if (validarPalpite(val)) {
+              input.className = "palpite-input" + (val ? " valid" : "");
+              onPalpiteChange(game.id, amigo, AMIGOS.indexOf(amigo), val, oficialPlacar);
+            } else {
+              input.className = "palpite-input invalid";
+            }
+          });
+          tdPalpite.appendChild(input);
+        } else {
+          tdPalpite.textContent = palpite || "--";
+        }
+        tr.appendChild(tdPalpite);
+
+        // Coluna: Pontos
+        const tdPts = document.createElement("td");
+        tdPts.className = "col-pts";
+        if (ptsProvisorio !== null) {
+          tdPts.textContent = String(ptsProvisorio);
+          if (pts === null) tdPts.classList.add("pts-provisional");
+        } else {
+          tdPts.textContent = "--";
+        }
+        tr.appendChild(tdPts);
+
+        tbody.appendChild(tr);
+      }
+
+      table.appendChild(tbody);
+
+      // Rodapé do grupo com total de pontos
+      const tfoot = document.createElement("tfoot");
+      const trFoot = document.createElement("tr");
+      const tdFootLabel = document.createElement("td");
+      tdFootLabel.colSpan = 4;
+      tdFootLabel.textContent = "Total do grupo";
+      tdFootLabel.style.textAlign = "right";
+      tdFootLabel.style.fontWeight = "600";
+      trFoot.appendChild(tdFootLabel);
+
+      const tdFootPts = document.createElement("td");
+      tdFootPts.className = "col-pts";
+      tdFootPts.textContent = String(groupPts);
+      tdFootPts.style.fontWeight = "700";
+      trFoot.appendChild(tdFootPts);
+
+      tfoot.appendChild(trFoot);
+      table.appendChild(tfoot);
+
+      scrollWrap.appendChild(table);
+      groupDiv.appendChild(scrollWrap);
+      personSection.appendChild(groupDiv);
+    }
+
+    container.appendChild(personSection);
+  }
+}
+
+/**
+ * Agrupa jogos por dia, grupo ou time
+ */
+function _groupGames(games, groupBy, teamsMap) {
+  const groups = new Map();
+
+  for (const game of games) {
+    let key;
+
+    if (groupBy === "day") {
+      key = _gameDayKey(game);
+    } else if (groupBy === "group") {
+      key = game.group || "Outros";
+    } else if (groupBy === "team") {
+      const homeName = getTeamName(game, "home", teamsMap);
+      key = homeName || game.home_team_name_en || "Time";
+    } else {
+      key = "Todos";
+    }
+
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(game);
+  }
+
+  // Ordena jogos dentro de cada grupo por data
+  for (const [key, groupGames] of groups) {
+    groupGames.sort((a, b) => (_gameDateBrt(a)?.getTime() ?? 0) - (_gameDateBrt(b)?.getTime() ?? 0));
+  }
+
+  // Ordena grupos por key
+  return new Map([...groups.entries()].sort());
+}
+
+/**
+ * Formata o label do grupo
+ */
+function _formatGroupLabel(groupKey, groupBy) {
+  if (groupBy === "day") {
+    return _formatDayLabelFull(groupKey);
+  } else if (groupBy === "group") {
+    return `Grupo ${groupKey}`;
+  } else if (groupBy === "team") {
+    return groupKey;
+  }
+  return groupKey;
+}
+
+

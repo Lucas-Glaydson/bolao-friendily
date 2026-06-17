@@ -112,8 +112,17 @@
       </div>
 
       <div class="filter-group view-toggle-group">
-        <button id="btn-view-cards" class="btn btn-sm btn-outline active-view" title="Cards por pessoa">🏙️ Cards</button>
+        <button id="btn-view-cards" class="btn btn-sm btn-outline active-view" title="Cards por pessoa">🏙️
+          Cards</button>
         <button id="btn-view-table" class="btn btn-sm btn-outline" title="Tabela por dia">📊 Tabela</button>
+      </div>
+
+      <div class="filter-group" id="groupby-group">
+        <label for="filter-groupby">Agrupar:</label>
+        <select id="filter-groupby" aria-label="Agrupar jogos por">
+          <option value="day">Por Dia</option>
+          <option value="group">Por Grupo</option>
+        </select>
       </div>
 
       <div class="filter-group">
@@ -144,13 +153,14 @@
       <button class="section-nav-btn" data-tab="1">🏆 Ranking</button>
       <button class="section-nav-btn" data-tab="2">📊 Tabelas</button>
       <button class="section-nav-btn" data-tab="3">🗓️ Calendário</button>
+      <button class="section-nav-btn" data-tab="4">👤 Por Pessoa</button>
     </nav>
 
     <!-- Carrossel de painéis -->
     <div id="view-carousel" class="view-carousel">
 
       <!-- Painel 0: Hoje -->
-      <div class="view-panel">eXT
+      <div class="view-panel">
         <div id="today-section" class="today-section" aria-label="Jogos de hoje"></div>
       </div>
 
@@ -161,6 +171,19 @@
           <div id="ranking-list" class="ranking-list" role="list"></div>
         </div>
         <div id="ranking-table-wrap" class="today-table-wrap"></div>
+
+        <!-- Controle de agrupamento para tabelas por pessoa -->
+        <div class="ranking-groupby-control" style="text-align: center; margin: 1rem 0;">
+          <label for="ranking-groupby" style="margin-right: 0.5rem; font-weight: 600;">Agrupar jogos por:</label>
+          <select id="ranking-groupby" style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border);">
+            <option value="day">Dia</option>
+            <option value="group">Grupo</option>
+            <option value="team">Time</option>
+          </select>
+        </div>
+
+        <!-- Container para tabelas por pessoa -->
+        <div id="ranking-person-tables" class="ranking-person-tables"></div>
       </div>
 
       <!-- Painel 2: Tabelas de Palpites -->
@@ -186,6 +209,13 @@
             <button class="cal-filter-btn" data-filter="finished">✅ Finalizados</button>
           </div>
           <div id="calendar-container" class="calendar-container"></div>
+        </section>
+      </div>
+
+      <!-- Painel 4: Por Pessoa -->
+      <div class="view-panel">
+        <section class="page-section" aria-label="Palpites por pessoa">
+          <div id="pessoa-cards-container" class="pessoa-cards-wrap"></div>
         </section>
       </div>
 
