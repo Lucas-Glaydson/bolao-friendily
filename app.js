@@ -161,8 +161,8 @@ function _renderAll() {
   _renderCalendar(games, state.calFilter);
 
   // Renderiza tabelas por pessoa no painel de ranking (filtra por pessoa se selecionado)
-  const rankingGames = state.filters.person 
-    ? state.games 
+  const rankingGames = state.filters.person
+    ? state.games
     : state.games;
   renderRankingPersonTables(
     rankingGames, state.teamsMap, state.stadiumsMap,
