@@ -31,6 +31,7 @@ const state = {
   overrides: {},                // placares inseridos manualmente
   calFilter: "all",            // filtro ativo no calendário
   rankingGroupBy: "day",       // "day" | "group" | "team" - agrupamento das tabelas por pessoa no ranking
+  pessoaGroupBy: "day",        // "day" | "group" | "team" - agrupamento na aba Por Pessoa
   filters: { group: "", round: "", status: "", person: "", team: "", date: "" },
   refreshTimer: null,
 };
@@ -148,21 +149,26 @@ function _renderAll() {
 
   // Renderiza cards de pessoa na aba Por Pessoa
   renderPessoasCards(
-    games, state.teamsMap, state.stadiumsMap,
+    state.games, state.teamsMap, state.stadiumsMap,
     state.palpitesStore, state.filters,
     isAuthenticated(),
     _handlePalpiteChange,
     _handleGameClick,
+    state.pessoaGroupBy,
   );
 
   _updateAdminUI();
   _renderCalendar(games, state.calFilter);
 
-  // Renderiza tabelas por pessoa no painel de ranking
+  // Renderiza tabelas por pessoa no painel de ranking (filtra por pessoa se selecionado)
+  const rankingGames = state.filters.person 
+    ? state.games 
+    : state.games;
   renderRankingPersonTables(
-    state.games, state.teamsMap, state.stadiumsMap,
+    rankingGames, state.teamsMap, state.stadiumsMap,
     state.palpitesStore, state.rankingGroupBy,
-    isAuthenticated(), _handlePalpiteChange, _handleGameClick
+    isAuthenticated(), _handlePalpiteChange, _handleGameClick,
+    state.filters.person,
   );
 
   // Restaura foco
@@ -497,7 +503,19 @@ function _setupEventListeners() {
     renderRankingPersonTables(
       state.games, state.teamsMap, state.stadiumsMap,
       state.palpitesStore, state.rankingGroupBy,
-      isAuthenticated(), _handlePalpiteChange, _handleGameClick
+      isAuthenticated(), _handlePalpiteChange, _handleGameClick,
+      state.filters.person
+    );
+  });
+
+  // ── Agrupamento de tabelas na aba Por Pessoa ──
+  document.getElementById("pessoa-groupby")?.addEventListener("change", (e) => {
+    state.pessoaGroupBy = e.target.value;
+    renderPessoasCards(
+      state.games, state.teamsMap, state.stadiumsMap,
+      state.palpitesStore, state.filters,
+      isAuthenticated(), _handlePalpiteChange, _handleGameClick,
+      state.pessoaGroupBy
     );
   });
 

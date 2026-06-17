@@ -1321,7 +1321,6 @@ body {
 .section-nav {
   display: flex;
   gap: .4rem;
-  flex-wrap: wrap;
   padding: .6rem 1rem;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
@@ -1329,6 +1328,27 @@ body {
   top: var(--sticky-top, 52px);
   z-index: 10;
   margin-bottom: .5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.section-nav::-webkit-scrollbar {
+  height: 4px;
+}
+
+.section-nav::-webkit-scrollbar-track {
+  background: var(--bg-alt);
+}
+
+.section-nav::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.section-nav::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 .section-nav-btn {
@@ -2036,13 +2056,32 @@ body {
    PESSOA CARDS – grade de palpites por participante
    ============================================================ */
 
-/* Grade centralizada */
+/* Grade similar ao ranking */
 .pessoa-cards-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: center;
-  padding: 1rem .5rem 2rem;
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 0 auto;
+}
+
+/* Em telas grandes, força no mínimo 3 colunas */
+@media (min-width: 1200px) {
+  .pessoa-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1199px) {
+  .pessoa-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .pessoa-cards-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Card individual */

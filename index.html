@@ -209,6 +209,15 @@
       <!-- Painel 4: Por Pessoa -->
       <div class="view-panel">
         <section class="page-section" aria-label="Palpites por pessoa">
+          <!-- Controle de agrupamento para Por Pessoa -->
+          <div class="pessoa-groupby-control" style="text-align: center; margin: 1rem 0;">
+            <label for="pessoa-groupby" style="margin-right: 0.5rem; font-weight: 600;">Agrupar jogos por:</label>
+            <select id="pessoa-groupby" style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border);">
+              <option value="day">Dia</option>
+              <option value="group">Grupo</option>
+              <option value="team">Time</option>
+            </select>
+          </div>
           <div id="pessoa-cards-container" class="pessoa-cards-wrap"></div>
         </section>
       </div>
