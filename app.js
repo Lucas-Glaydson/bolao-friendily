@@ -34,6 +34,9 @@ const state = {
   pessoaGroupBy: "day",        // "day" | "group" | "team" - agrupamento na aba Por Pessoa
   filters: { group: "", round: "", status: "", person: "", team: "", date: "" },
   refreshTimer: null,
+  // Cache para evitar recálculos desnecessários
+  cachedRanking: null,
+  lastFinishedGamesKey: null,  // hash dos jogos finalizados
 };
 
 // ID do jogo aberto no modal de placar manual
@@ -46,9 +49,50 @@ let _scoreModalGameId = null;
 const debouncedSave = debounce(() => savePalpites(state.palpitesStore), 500);
 
 const debouncedUpdateTotais = debounce(
-  () => atualizarTotais(state.games, state.palpitesStore),
+  () => atualizarTotais(state.games, state.palpitesStore, state),
   600
 );
+
+/* ─────────────────────────────────────────────────────────
+   CACHE DE RANKING
+   ───────────────────────────────────────────────────────── */
+
+/** Calcula ranking e o armazena em cache */
+function calculateRankingCached(allGames, palpitesStore, forceRecalc = false) {
+  // Gera chave baseada nos jogos finalizados
+  const finishedKey = allGames
+    .filter(g => g.finished === "TRUE")
+    .map(g => `${g.id}:${g.home_score}x${g.away_score}`)
+    .join("|");
+  
+  // Retorna cache se nada mudou
+  if (!forceRecalc && state.cachedRanking && state.lastFinishedGamesKey === finishedKey) {
+    return state.cachedRanking;
+  }
+  
+  // Recalcula ranking
+  console.log("[app] 🔄 Recalculando ranking...");
+  const totals = {};
+  for (const a of AMIGOS) totals[a] = 0;
+  
+  for (const game of allGames) {
+    if (game.finished !== "TRUE") continue;
+    const oficial = `${game.home_score} x ${game.away_score}`;
+    for (const amigo of AMIGOS) {
+      const pts = calcularPontos(getPalpite(game.id, amigo, palpitesStore), oficial);
+      if (pts !== null) totals[amigo] += pts;
+    }
+  }
+  
+  const sorted = Object.entries(totals).sort(([, a], [, b]) => b - a);
+  
+  // Atualiza cache
+  state.cachedRanking = { totals, sorted };
+  state.lastFinishedGamesKey = finishedKey;
+  console.log("[app] ✅ Ranking atualizado e cacheado");
+  
+  return state.cachedRanking;
+}
 
 /* ─────────────────────────────────────────────────────────
    INICIALIZAÇÃO
@@ -145,6 +189,9 @@ function _renderAll() {
 
   const games = _gamesWithOverrides();
 
+  // Calcula ranking em cache antes de renderizar
+  calculateRankingCached(games, state.palpitesStore);
+
   // Renderiza tabela transposta por dia na aba de Tabelas
   renderTabela(
     games, state.teamsMap, state.stadiumsMap,
@@ -176,6 +223,7 @@ function _renderAll() {
     state.palpitesStore, state.rankingGroupBy,
     isAuthenticated(), _handlePalpiteChange, _handleGameClick,
     state.filters.person,
+    state  // passa state para acessar cache
   );
 
   // Restaura foco
@@ -425,7 +473,14 @@ function _setupEventListeners() {
   // ── Login ──
   document.getElementById("btn-login").addEventListener("click", () => {
     document.getElementById("login-modal").classList.remove("hidden");
-    document.getElementById("input-user").focus();
+    const userInput = document.getElementById("input-user");
+    const passInput = document.getElementById("input-pass");
+    // Foca no campo vazio ou no usuário se ambos estiverem vazios
+    if (userInput.value.trim()) {
+      passInput.focus();
+    } else {
+      userInput.focus();
+    }
   });
 
   document.getElementById("login-form").addEventListener("submit", (e) => {
@@ -511,7 +566,8 @@ function _setupEventListeners() {
       state.games, state.teamsMap, state.stadiumsMap,
       state.palpitesStore, state.rankingGroupBy,
       isAuthenticated(), _handlePalpiteChange, _handleGameClick,
-      state.filters.person
+      state.filters.person,
+      state  // passa state para acessar cache
     );
   });
 
@@ -982,9 +1038,13 @@ function _scheduleAutoRefresh() {
       state.games = updated;
       _enrichGamesUtcMs(state.games);
       const games = _gamesWithOverrides();
+      
+      // Recalcula cache (será rápido se nada mudou)
+      calculateRankingCached(games, state.palpitesStore);
+      
       _renderToday(games);
       atualizarCelulas(games, state.palpitesStore);
-      atualizarTotais(games, state.palpitesStore);
+      atualizarTotais(games, state.palpitesStore, state);
       
       const time = new Date().toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' });
       const statusEl = document.getElementById("api-status");

@@ -35,7 +35,7 @@ export function renderTabela(
     p.style.cssText = "text-align:center;padding:2rem;color:var(--text-muted)";
     p.textContent = "Nenhum jogo encontrado para os filtros selecionados.";
     container.appendChild(p);
-    _renderFooter(allGames, palpitesStore);
+    _renderFooter(allGames, palpitesStore, null);
     return;
   }
 
@@ -89,8 +89,8 @@ export function atualizarCelulas(games, palpitesStore) {
   }
 }
 
-export function atualizarTotais(allGames, palpitesStore) {
-  _renderFooter(allGames, palpitesStore);
+export function atualizarTotais(allGames, palpitesStore, state = null) {
+  _renderFooter(allGames, palpitesStore, state);
 }
 
 export function updateResultCell(gameId, amigoIdx, pts) {
@@ -260,22 +260,29 @@ function _renderDaySection(dayNum, dayKey, games, teamsMap, stadiumsMap, palpite
   return section;
 }
 
-function _renderFooter(allGames, palpitesStore) {
+function _renderFooter(allGames, palpitesStore, state = null) {
   const footerEl = document.getElementById("bolao-footer");
   if (!footerEl) return;
   footerEl.innerHTML = "";
 
-  const totals = _newSubtotals();
-  for (const game of allGames) {
-    if (game.finished !== "TRUE") continue;
-    const oficial = `${game.home_score} x ${game.away_score}`;
-    for (const amigo of AMIGOS) {
-      const pts = calcularPontos(getPalpite(game.id, amigo, palpitesStore), oficial);
-      if (pts !== null) totals[amigo] += pts;
+  // Usa cálculo de ranking cacheado se disponível
+  let totals, sorted;
+  if (state?.cachedRanking) {
+    ({ totals, sorted } = state.cachedRanking);
+  } else {
+    // Fallback: calcula sem cache
+    totals = _newSubtotals();
+    for (const game of allGames) {
+      if (game.finished !== "TRUE") continue;
+      const oficial = `${game.home_score} x ${game.away_score}`;
+      for (const amigo of AMIGOS) {
+        const pts = calcularPontos(getPalpite(game.id, amigo, palpitesStore), oficial);
+        if (pts !== null) totals[amigo] += pts;
+      }
     }
+    sorted = Object.entries(totals).sort(([, a], [, b]) => b - a);
   }
 
-  const sorted = Object.entries(totals).sort(([, a], [, b]) => b - a);
   _updateRankingBar(sorted);
 
   if (sorted.every(([, v]) => v === 0)) return;
@@ -678,25 +685,30 @@ export function renderPessoasCards(
  */
 export function renderRankingPersonTables(
   allGames, teamsMap, stadiumsMap, palpitesStore,
-  groupBy = "day", isAdmin, onPalpiteChange, onGameClick, filterPerson = ""
+  groupBy = "day", isAdmin, onPalpiteChange, onGameClick, filterPerson = "", state = null
 ) {
   const container = document.getElementById("ranking-person-tables");
   if (!container) return;
 
   container.innerHTML = "";
 
-  // Calcula ranking geral
-  const totals = _newSubtotals();
-  for (const game of allGames) {
-    if (game.finished !== "TRUE") continue;
-    const oficial = `${game.home_score} x ${game.away_score}`;
-    for (const amigo of AMIGOS) {
-      const pts = calcularPontos(getPalpite(game.id, amigo, palpitesStore), oficial);
-      if (pts !== null) totals[amigo] += pts;
+  // Usa cálculo de ranking cacheado se disponível
+  let totals, sorted;
+  if (state?.cachedRanking) {
+    ({ totals, sorted } = state.cachedRanking);
+  } else {
+    // Fallback: calcula sem cache
+    totals = _newSubtotals();
+    for (const game of allGames) {
+      if (game.finished !== "TRUE") continue;
+      const oficial = `${game.home_score} x ${game.away_score}`;
+      for (const amigo of AMIGOS) {
+        const pts = calcularPontos(getPalpite(game.id, amigo, palpitesStore), oficial);
+        if (pts !== null) totals[amigo] += pts;
+      }
     }
+    sorted = Object.entries(totals).sort(([, a], [, b]) => b - a);
   }
-
-  const sorted = Object.entries(totals).sort(([, a], [, b]) => b - a);
   const MEDALS = ["\ud83e\udd47", "\ud83e\udd48", "\ud83e\udd49"];
 
   // Para cada pessoa no ranking, cria uma seção com seus jogos agrupados
