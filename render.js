@@ -419,3 +419,179 @@ function _newSubtotals() {
   for (const a of AMIGOS) obj[a] = 0;
   return obj;
 }
+
+/* ─────────────────────────────────────────────────────────
+   VIEW: CARDS POR PESSOA
+   ───────────────────────────────────────────────────────── */
+
+/**
+ * Renderiza grade de cards, um por pessoa, com os palpites lado a lado.
+ */
+export function renderPessoasCards(
+  allGames, teamsMap, stadiumsMap, palpitesStore,
+  filters, isAdmin, onPalpiteChange, onGameClick
+) {
+  let games = allGames.filter(g => {
+    if (filters.group && g.group !== filters.group) return false;
+    if (filters.round && g.matchday !== filters.round) return false;
+    if (filters.status && getStatus(g) !== filters.status) return false;
+    if (filters.team) {
+      const h = (g.home_team_name_en ?? "").toLowerCase();
+      const a = (g.away_team_name_en ?? "").toLowerCase();
+      const t = filters.team.toLowerCase();
+      if (!h.includes(t) && !a.includes(t)) return false;
+    }
+    if (filters.date && _gameDayKey(g) !== filters.date) return false;
+    return true;
+  });
+  games.sort((a, b) => (_gameDateBrt(a)?.getTime() ?? 0) - (_gameDateBrt(b)?.getTime() ?? 0));
+
+  const filteredAmigos = filters.person ? AMIGOS.filter(a => a === filters.person) : AMIGOS;
+
+  const container = document.getElementById("bolao-tables");
+  container.innerHTML = "";
+
+  // Totais globais para ranking
+  const totals = _newSubtotals();
+  for (const g of allGames) {
+    if (g.finished !== "TRUE") continue;
+    const oficial = `${g.home_score} x ${g.away_score}`;
+    for (const a of AMIGOS) {
+      const p = calcularPontos(getPalpite(g.id, a, palpitesStore), oficial);
+      if (p != null) totals[a] += p;
+    }
+  }
+  const sortedTotals = Object.entries(totals).sort(([, a], [, b]) => b - a);
+  const rankMap = {};
+  sortedTotals.forEach(([name], i) => { rankMap[name] = i + 1; });
+
+  if (games.length === 0) {
+    const p = document.createElement("p");
+    p.style.cssText = "text-align:center;padding:2rem;color:var(--text-muted)";
+    p.textContent = "Nenhum jogo encontrado para os filtros selecionados.";
+    container.appendChild(p);
+    _renderFooter(allGames, palpitesStore);
+    return;
+  }
+
+  const MEDALS = ["\ud83e\udd47", "\ud83e\udd48", "\ud83e\udd49"];
+  const grid = document.createElement("div");
+  grid.className = "pessoa-cards-grid";
+
+  for (const amigo of filteredAmigos) {
+    const rank = rankMap[amigo] ?? AMIGOS.length;
+    const totalPts = totals[amigo] ?? 0;
+    const medal = rank <= 3 ? MEDALS[rank - 1] : `#${rank}`;
+    const rankClass = rank <= 3 ? ` card-top${rank}` : "";
+
+    const card = document.createElement("div");
+    card.className = `pessoa-card${rankClass}`;
+    card.dataset.amigo = amigo;
+
+    // ── Header
+    const header = document.createElement("div");
+    header.className = "pessoa-card-header";
+    const medalEl = document.createElement("span");
+    medalEl.className = "pcard-medal";
+    medalEl.textContent = medal;
+    const nameEl = document.createElement("span");
+    nameEl.className = "pcard-name";
+    nameEl.textContent = amigo;
+    const ptsEl = document.createElement("span");
+    ptsEl.className = "pcard-pts";
+    ptsEl.textContent = `${totalPts}pts`;
+    header.appendChild(medalEl);
+    header.appendChild(nameEl);
+    header.appendChild(ptsEl);
+    card.appendChild(header);
+
+    // ── Body
+    const body = document.createElement("div");
+    body.className = "pessoa-card-body";
+
+    for (const game of games) {
+      const palpite = getPalpite(game.id, amigo, palpitesStore);
+      const status = getStatus(game);
+      const oficialPlacar = game.finished === "TRUE" ? `${game.home_score} x ${game.away_score}` : null;
+      const livePlacar = status === "live" && game.home_score != null
+        ? `${game.home_score} x ${game.away_score}` : null;
+      const pts = calcularPontos(palpite, oficialPlacar);
+      const ptsProvisorio = pts !== null ? pts : calcularPontos(palpite, livePlacar);
+
+      const row = document.createElement("div");
+      row.className = "pcard-row";
+      if (status === "live") row.classList.add("pcard-row-live");
+
+      // Matchup label
+      const homeName = getTeamName(game, "home", teamsMap);
+      const awayName = getTeamName(game, "away", teamsMap);
+      const matchupEl = document.createElement("span");
+      matchupEl.className = "pcard-matchup";
+      matchupEl.textContent = `${_abbrev(homeName)}\u00d7${_abbrev(awayName)}`;
+      matchupEl.title = `${homeName} \u00d7 ${awayName}`;
+      matchupEl.style.cursor = "pointer";
+      matchupEl.addEventListener("click", () => onGameClick(game, homeName, awayName, teamsMap, stadiumsMap));
+      row.appendChild(matchupEl);
+
+      // Official score / time
+      const offEl = document.createElement("span");
+      offEl.className = "pcard-official";
+      if (oficialPlacar) {
+        offEl.textContent = oficialPlacar;
+        offEl.classList.add("off-done");
+      } else if (status === "live") {
+        offEl.textContent = `\ud83d\udd34 ${game.home_score ?? 0}\u00d7${game.away_score ?? 0}`;
+        offEl.classList.add("off-live");
+      } else {
+        const rawTime = game.local_date?.split(" ")[1];
+        offEl.textContent = rawTime ? _timeToBrt(rawTime, game.stadium_id, stadiumsMap) : "--";
+        offEl.classList.add("off-sched");
+      }
+      row.appendChild(offEl);
+
+      // Palpite value
+      const palEl = document.createElement("span");
+      palEl.className = "pcard-palpite";
+      const provisional = pts === null && ptsProvisorio !== null;
+      if (pts === 3 || (provisional && ptsProvisorio === 3)) palEl.classList.add("pal-exact");
+      else if (pts === 1 || (provisional && ptsProvisorio === 1)) palEl.classList.add("pal-correct");
+      else if (pts === 0 || (provisional && ptsProvisorio === 0)) palEl.classList.add("pal-wrong");
+      if (provisional) palEl.classList.add("pal-provisional");
+
+      if (isAdmin) {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "palpite-input" + (palpite ? " valid" : "");
+        input.value = palpite || "";
+        input.placeholder = "0x0";
+        input.maxLength = 7;
+        input.dataset.gameId = String(game.id);
+        input.dataset.amigo = amigo;
+        input.dataset.amigoIdx = String(AMIGOS.indexOf(amigo));
+        input.setAttribute("aria-label", `Palpite de ${amigo}`);
+        input.addEventListener("input", e => {
+          const val = e.target.value.trim();
+          if (validarPalpite(val)) {
+            input.classList.remove("invalid");
+            input.classList.toggle("valid", !!val);
+            onPalpiteChange(game.id, amigo, AMIGOS.indexOf(amigo), val, oficialPlacar);
+          } else {
+            input.classList.add("invalid");
+          }
+        });
+        palEl.appendChild(input);
+      } else {
+        palEl.textContent = palpite || "--";
+      }
+      row.appendChild(palEl);
+      body.appendChild(row);
+    }
+
+    card.appendChild(body);
+    grid.appendChild(card);
+  }
+
+  container.appendChild(grid);
+  _renderFooter(allGames, palpitesStore);
+}
+

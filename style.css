@@ -2031,3 +2031,256 @@ body {
     padding: 3px 5px;
   }
 }
+
+/* ============================================================
+   PESSOA CARDS – grade de palpites por participante
+   ============================================================ */
+
+/* Botão de alternância de layout */
+.view-toggle-group {
+  display: flex;
+  gap: .25rem;
+  align-items: center;
+}
+
+.view-toggle-group .btn-outline.active-view {
+  background: var(--green-dark);
+  color: var(--gold);
+  border-color: var(--green-dark);
+}
+
+/* Grade centralizada */
+.pessoa-cards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  padding: 1rem .5rem 2rem;
+}
+
+/* Card individual */
+.pessoa-card {
+  width: 230px;
+  flex-shrink: 0;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: transform .15s, box-shadow .15s;
+}
+
+.pessoa-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .15);
+}
+
+/* Top-3 destacados */
+.pessoa-card.card-top1 {
+  border-color: #ffd700;
+  box-shadow: 0 2px 14px rgba(255, 214, 0, .35);
+}
+
+.pessoa-card.card-top2 {
+  border-color: #bdbdbd;
+  box-shadow: 0 2px 10px rgba(180, 180, 180, .3);
+}
+
+.pessoa-card.card-top3 {
+  border-color: #b5651d;
+  box-shadow: 0 2px 10px rgba(181, 101, 29, .3);
+}
+
+/* Header */
+.pessoa-card-header {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .6rem .85rem;
+  background: var(--green-dark);
+  color: var(--white);
+}
+
+.card-top1 .pessoa-card-header {
+  background: linear-gradient(135deg, #b8860b, #ffd700);
+  color: #1a1a1a;
+}
+
+.card-top2 .pessoa-card-header {
+  background: linear-gradient(135deg, #757575, #e0e0e0);
+  color: #1a1a1a;
+}
+
+.card-top3 .pessoa-card-header {
+  background: linear-gradient(135deg, #6d3b10, #d4924a);
+  color: #fff;
+}
+
+.pcard-medal {
+  font-size: 1.15rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.pcard-name {
+  font-size: .92rem;
+  font-weight: 700;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pcard-pts {
+  font-size: .75rem;
+  font-weight: 700;
+  background: rgba(0, 0, 0, .22);
+  border-radius: 10px;
+  padding: .12rem .5rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.card-top1 .pcard-pts,
+.card-top2 .pcard-pts {
+  background: rgba(0, 0, 0, .15);
+}
+
+/* Body */
+.pessoa-card-body {
+  max-height: 340px;
+  overflow-y: auto;
+  padding: .2rem 0;
+}
+
+.pessoa-card-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.pessoa-card-body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+/* Linha de jogo */
+.pcard-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: .35rem;
+  padding: .3rem .75rem;
+  border-bottom: 1px solid var(--border);
+  font-size: .78rem;
+  transition: background .1s;
+}
+
+.pcard-row:last-child {
+  border-bottom: none;
+}
+
+.pcard-row:hover {
+  background: rgba(76, 175, 80, .06);
+}
+
+.pcard-row-live {
+  background: rgba(229, 57, 53, .06) !important;
+}
+
+/* Matchup (time×time) – clicável */
+.pcard-matchup {
+  font-weight: 600;
+  font-size: .75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+  transition: color .12s;
+}
+
+.pcard-matchup:hover {
+  color: var(--green-light);
+  text-decoration: underline;
+  text-decoration-color: var(--green-light);
+}
+
+/* Placar oficial / horário */
+.pcard-official {
+  font-size: .7rem;
+  font-family: monospace;
+  white-space: nowrap;
+  padding: .1rem .35rem;
+  border-radius: 4px;
+}
+
+.pcard-official.off-done {
+  background: var(--score-exact-bg);
+  color: var(--score-exact-fg);
+  font-weight: 700;
+}
+
+.pcard-official.off-live {
+  background: #e53e3e;
+  color: #fff;
+  animation: cell-live-pulse 2s ease-in-out infinite;
+}
+
+.pcard-official.off-sched {
+  color: var(--text-muted);
+  background: transparent;
+}
+
+/* Palpite do participante */
+.pcard-palpite {
+  font-family: monospace;
+  font-size: .78rem;
+  font-weight: 700;
+  text-align: center;
+  padding: .12rem .4rem;
+  border-radius: 4px;
+  min-width: 46px;
+  white-space: nowrap;
+}
+
+.pcard-palpite.pal-exact {
+  background: var(--score-exact-bg);
+  color: var(--score-exact-fg);
+}
+
+.pcard-palpite.pal-correct {
+  background: var(--score-ok-bg);
+  color: var(--score-ok-fg);
+}
+
+.pcard-palpite.pal-wrong {
+  background: var(--score-wrong-bg);
+  color: var(--score-wrong-fg);
+}
+
+.pcard-palpite.pal-provisional {
+  opacity: .7;
+  animation: cell-live-pulse 2s ease-in-out infinite;
+}
+
+/* Palpite input dentro do card */
+.pcard-palpite .palpite-input {
+  width: 46px;
+  padding: .1rem .2rem;
+  font-size: .72rem;
+}
+
+/* Responsivo: em telas menores os cards ficam menores */
+@media (max-width: 480px) {
+  .pessoa-card {
+    width: calc(50% - .5rem);
+  }
+
+  .pcard-row {
+    grid-template-columns: 1fr auto;
+    gap: .25rem;
+    padding: .25rem .5rem;
+  }
+
+  .pcard-official {
+    display: none;
+  }
+}

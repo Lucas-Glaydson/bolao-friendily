@@ -15,7 +15,7 @@ import {
   randomPlacar, debounce, calcularPontos, getStatus, parseGameDate,
 } from "./utils.js";
 import {
-  renderTabela, atualizarCelulas, atualizarTotais, updateResultCell, renderDaySection,
+  renderTabela, atualizarCelulas, atualizarTotais, updateResultCell, renderDaySection, renderPessoasCards,
 } from "./render.js";
 
 /* ─────────────────────────────────────────────────────────
@@ -29,6 +29,7 @@ const state = {
   palpitesStore: { versao: 1, palpites: {} },
   overrides: {},                // placares inseridos manualmente
   calFilter: "all",            // filtro ativo no calendário
+  viewMode: "cards",           // "cards" | "table"
   filters: { group: "", round: "", status: "", person: "", team: "", date: "" },
   refreshTimer: null,
 };
@@ -135,13 +136,23 @@ function _renderAll() {
 
   const games = _gamesWithOverrides();
 
-  renderTabela(
-    games, state.teamsMap, state.stadiumsMap,
-    state.palpitesStore, isAuthenticated(),
-    state.filters,
-    _handlePalpiteChange,
-    _handleGameClick,
-  );
+  if (state.viewMode === "cards") {
+    renderPessoasCards(
+      games, state.teamsMap, state.stadiumsMap,
+      state.palpitesStore, state.filters,
+      isAuthenticated(),
+      _handlePalpiteChange,
+      _handleGameClick,
+    );
+  } else {
+    renderTabela(
+      games, state.teamsMap, state.stadiumsMap,
+      state.palpitesStore, isAuthenticated(),
+      state.filters,
+      _handlePalpiteChange,
+      _handleGameClick,
+    );
+  }
 
   _updateAdminUI();
   _renderCalendar(games, state.calFilter);
@@ -501,6 +512,20 @@ function _setupEventListeners() {
 
   // Estado inicial correto
   _updateActiveBtn();
+
+  // ── Alternância de layout ──
+  document.getElementById("btn-view-cards").addEventListener("click", () => {
+    state.viewMode = "cards";
+    document.getElementById("btn-view-cards").classList.add("active-view");
+    document.getElementById("btn-view-table").classList.remove("active-view");
+    _renderAll();
+  });
+  document.getElementById("btn-view-table").addEventListener("click", () => {
+    state.viewMode = "table";
+    document.getElementById("btn-view-table").classList.add("active-view");
+    document.getElementById("btn-view-cards").classList.remove("active-view");
+    _renderAll();
+  });
 
   // ── Exportar ──
   document.getElementById("btn-export").addEventListener("click", exportJSON);
