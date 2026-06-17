@@ -29,7 +29,7 @@ const state = {
   palpitesStore: { versao: 1, palpites: {} },
   overrides: {},                // placares inseridos manualmente
   calFilter: "all",            // filtro ativo no calendário
-  filters: { group: "", round: "", status: "" },
+  filters: { group: "", round: "", status: "", person: "", team: "", date: "" },
   refreshTimer: null,
 };
 
@@ -106,6 +106,7 @@ async function _loadAPIData(skipCache = false) {
     _enrichGamesUtcMs(state.games);
 
     elStatus.textContent = `✅ ${new Date().toLocaleTimeString("pt-BR")}`;
+    _populateDynamicFilters(state.games, state.teamsMap);
     _renderAll();
   } catch (err) {
     console.error("[app] Falha na API:", err);
@@ -458,6 +459,18 @@ function _setupEventListeners() {
     state.filters.status = e.target.value;
     _renderAll();
   });
+  document.getElementById("filter-person").addEventListener("change", (e) => {
+    state.filters.person = e.target.value;
+    _renderAll();
+  });
+  document.getElementById("filter-team").addEventListener("change", (e) => {
+    state.filters.team = e.target.value;
+    _renderAll();
+  });
+  document.getElementById("filter-date").addEventListener("change", (e) => {
+    state.filters.date = e.target.value;
+    _renderAll();
+  });
 
   // ── Tabs / Carrossel ──
   const _carousel = document.getElementById("view-carousel");
@@ -634,6 +647,70 @@ function _gamesWithOverrides() {
     const ov = state.overrides[String(g.id)];
     return ov ? { ...g, ...ov } : g;
   });
+}
+
+/* ─────────────────────────────────────────────────────────
+   HELPERS: FILTROS DINÂMICOS
+   ───────────────────────────────────────────────────────── */
+
+/**
+ * Popula os selects de pessoa, time e data com base nos jogos carregados.
+ * Chamado uma vez após a API responder com sucesso.
+ */
+function _populateDynamicFilters(games, teamsMap) {
+  // ── Pessoas ──
+  const personSel = document.getElementById("filter-person");
+  if (personSel && personSel.options.length <= 1) {
+    for (const amigo of AMIGOS) {
+      const opt = document.createElement("option");
+      opt.value = amigo;
+      opt.textContent = amigo;
+      personSel.appendChild(opt);
+    }
+  }
+
+  // ── Times ──
+  const teamSel = document.getElementById("filter-team");
+  if (teamSel && teamSel.options.length <= 1) {
+    const names = new Set();
+    for (const g of games) {
+      const h = getTeamName(g, "home", teamsMap);
+      const a = getTeamName(g, "away", teamsMap);
+      if (h) names.add(h);
+      if (a) names.add(a);
+    }
+    for (const name of [...names].sort()) {
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      teamSel.appendChild(opt);
+    }
+  }
+
+  // ── Datas ──
+  const dateSel = document.getElementById("filter-date");
+  if (dateSel && dateSel.options.length <= 1) {
+    const seen = new Set();
+    const pairs = [];
+    for (const g of games) {
+      const m = String(g.local_date ?? "").match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      if (!m) continue;
+      const key = `${m[3]}-${m[2]}-${m[1]}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        const label = new Date(`${m[3]}-${m[2]}-${m[1]}T12:00:00`)
+          .toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
+        pairs.push({ key, label });
+      }
+    }
+    pairs.sort((a, b) => a.key.localeCompare(b.key));
+    for (const { key, label } of pairs) {
+      const opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = label;
+      dateSel.appendChild(opt);
+    }
+  }
 }
 
 /* ─────────────────────────────────────────────────────────

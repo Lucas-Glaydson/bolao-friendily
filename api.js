@@ -6,11 +6,82 @@
  *   GET /get/teams    → 48 times
  *   GET /get/stadiums → 16 estádios
  *   GET /get/groups   → classificação dos grupos
+ *
+ * Fallback: ESPN unofficial API (https://site.api.espn.com)
+ *   Usado automaticamente se worldcup26.ir estiver indisponível.
+ *   Os placares são mapeados por nome de time sobre os jogos em cache.
  */
 
 import { saveCache, loadCache, loadCacheStale } from "./storage.js";
 
 const BASE_URL = "https://worldcup26.ir";
+
+/* ─────────────────────────────────────────────────────────
+   FALLBACK: ESPN API
+   ───────────────────────────────────────────────────────── */
+
+const ESPN_SCOREBOARD_URL =
+  "https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260601-20260720";
+
+/** Normaliza nome de time para matching fuzzy (minúsculo, sem acentos, sem espaços extras). */
+function _normalizeTeamName(name = "") {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, " ")
+    .trim();
+}
+
+/**
+ * Busca placares atualizados da API da ESPN e os aplica sobre os jogos
+ * já armazenados em cache (que possuem os IDs corretos).
+ * @param {Object[]} cachedGames - Jogos do cache expirado do worldcup26.ir
+ * @returns {Object[]} Jogos com placares atualizados
+ */
+async function _fetchScoresFromESPN(cachedGames) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10_000);
+
+  try {
+    const res = await fetch(ESPN_SCOREBOARD_URL, { mode: "cors", signal: controller.signal });
+    if (!res.ok) throw new Error(`ESPN HTTP ${res.status}`);
+    const data = await res.json();
+
+    // Monta lookup: "homename__awayname" → game object (referência)
+    const lookup = new Map();
+    for (const g of cachedGames) {
+      const key = `${_normalizeTeamName(g.home_team_name_en)}__${_normalizeTeamName(g.away_team_name_en)}`;
+      lookup.set(key, g);
+    }
+
+    for (const event of (data.events ?? [])) {
+      const comp = event.competitions?.[0];
+      if (!comp) continue;
+
+      const home = comp.competitors?.find((c) => c.homeAway === "home");
+      const away = comp.competitors?.find((c) => c.homeAway === "away");
+      if (!home || !away) continue;
+
+      const key = `${_normalizeTeamName(home.team?.displayName ?? "")}__${_normalizeTeamName(away.team?.displayName ?? "")}`;
+      const cached = lookup.get(key);
+      if (!cached) continue;
+
+      const finished = comp.status?.type?.completed ?? false;
+      const inProgress = comp.status?.type?.state === "in";
+
+      cached.home_score = parseInt(home.score ?? "0") || 0;
+      cached.away_score = parseInt(away.score ?? "0") || 0;
+      cached.finished = finished ? "TRUE" : "FALSE";
+      if (inProgress) cached._live = true;
+    }
+
+    console.info("[api] Placares atualizados via ESPN (fallback).");
+    return cachedGames;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 /* ─────────────────────────────────────────────────────────
    CORE FETCHER
@@ -39,10 +110,10 @@ async function fetchEndpoint(path, skipCache = false) {
     saveCache(cacheKey, data);
     return data;
   } catch (err) {
-    // Fallback: usa cache expirado se existir
+    // Fallback 1: usa cache expirado se existir
     const stale = loadCacheStale(cacheKey);
     if (stale !== null) {
-      console.warn(`[api] Usando cache expirado para ${path}:`, err.message);
+      console.warn(`[api] worldcup26.ir indisponível – usando cache expirado para ${path}:`, err.message);
       return stale;
     }
     throw err;
@@ -86,13 +157,36 @@ function _toArray(data, ...keys) {
 
 /**
  * Retorna apenas os jogos da fase de grupos (type === "group").
+ * Tenta worldcup26.ir primeiro. Se falhar e não houver cache, tenta ESPN como fallback 2.
  * @param {boolean} skipCache
  * @returns {Promise<Object[]>}
  */
 export async function fetchGames(skipCache = false) {
-  const data = await fetchEndpoint("/get/games", skipCache);
-  const arr = _toArray(data, "games", "data", "results");
-  return arr.filter((g) => g.type === "group").map(_normalizeGame);
+  try {
+    const data = await fetchEndpoint("/get/games", skipCache);
+    const arr = _toArray(data, "games", "data", "results");
+    return arr.filter((g) => g.type === "group").map(_normalizeGame);
+  } catch (primaryErr) {
+    // Fallback 2: ESPN API – obtém placares sobre os jogos do cache expirado
+    console.warn("[api] worldcup26.ir sem cache disponível – tentando ESPN:", primaryErr.message);
+    const staleRaw = loadCacheStale("get_games");
+    const staleGames = staleRaw
+      ? _toArray(staleRaw, "games", "data", "results")
+        .filter((g) => g.type === "group")
+        .map(_normalizeGame)
+      : [];
+
+    if (staleGames.length === 0) {
+      throw new Error("Sem dados disponíveis: worldcup26.ir e cache expirado inacessíveis.");
+    }
+
+    try {
+      return await _fetchScoresFromESPN(staleGames);
+    } catch (espnErr) {
+      console.warn("[api] ESPN também falhou – retornando cache expirado sem atualização:", espnErr.message);
+      return staleGames;
+    }
+  }
 }
 
 /**

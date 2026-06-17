@@ -15,8 +15,16 @@ export function renderTabela(
     if (filters.group && g.group !== filters.group) return false;
     if (filters.round && g.matchday !== filters.round) return false;
     if (filters.status && getStatus(g) !== filters.status) return false;
+    if (filters.team) {
+      const h = (g.home_team_name_en ?? "").toLowerCase();
+      const a = (g.away_team_name_en ?? "").toLowerCase();
+      const t = filters.team.toLowerCase();
+      if (!h.includes(t) && !a.includes(t)) return false;
+    }
+    if (filters.date && _gameDayKey(g) !== filters.date) return false;
     return true;
   });
+  const filteredAmigos = filters.person ? AMIGOS.filter(a => a === filters.person) : AMIGOS;
   games.sort((a, b) => (_gameDateBrt(a)?.getTime() ?? 0) - (_gameDateBrt(b)?.getTime() ?? 0));
 
   const container = document.getElementById("bolao-tables");
@@ -43,7 +51,7 @@ export function renderTabela(
   for (const [dayKey, dayGames] of dayGroups) {
     const dayNum = allDayKeys.indexOf(dayKey) + 1;
     container.appendChild(
-      _renderDaySection(dayNum, dayKey, dayGames, teamsMap, stadiumsMap, palpitesStore, isAdmin, onPalpiteChange, onGameClick)
+      _renderDaySection(dayNum, dayKey, dayGames, teamsMap, stadiumsMap, palpitesStore, isAdmin, onPalpiteChange, onGameClick, filteredAmigos)
     );
   }
 
@@ -97,7 +105,7 @@ export function renderDaySection(dayNum, dayKey, games, teamsMap, stadiumsMap, p
   return _renderDaySection(dayNum, dayKey, games, teamsMap, stadiumsMap, palpitesStore, isAdmin, onPalpiteChange, onGameClick);
 }
 
-function _renderDaySection(dayNum, dayKey, games, teamsMap, stadiumsMap, palpitesStore, isAdmin, onPalpiteChange, onGameClick) {
+function _renderDaySection(dayNum, dayKey, games, teamsMap, stadiumsMap, palpitesStore, isAdmin, onPalpiteChange, onGameClick, filteredAmigos = AMIGOS) {
   const section = document.createElement("section");
   section.className = "day-section";
   section.id = `day-section-${dayKey}`;
@@ -179,7 +187,7 @@ function _renderDaySection(dayNum, dayKey, games, teamsMap, stadiumsMap, palpite
   const tbody = document.createElement("tbody");
   const hasFinished = games.some(g => g.finished === "TRUE" || getStatus(g) === "live");
 
-  for (const amigo of AMIGOS) {
+  for (const amigo of filteredAmigos) {
     const tr = document.createElement("tr");
     tr.dataset.amigo = amigo;
 
