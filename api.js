@@ -16,12 +16,21 @@ import { saveCache, loadCache, loadCacheStale } from "./storage.js";
 
 const BASE_URL = "https://worldcup26.ir";
 
+// Proxies CORS para contornar bloqueios
+const CORS_PROXIES = [
+  (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+];
+
 /* ─────────────────────────────────────────────────────────
    FALLBACK: ESPN API
    ───────────────────────────────────────────────────────── */
 
 const ESPN_SCOREBOARD_URL =
   "https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260601-20260720";
+
+// API FIFA oficial (backup adicional)
+const FIFA_API_URL = "https://api.fifa.com/api/v3/calendar/matches";
 
 /** Normaliza nome de time para matching fuzzy (minúsculo, sem acentos, sem espaços extras). */
 function _normalizeTeamName(name = "") {
@@ -40,13 +49,25 @@ function _normalizeTeamName(name = "") {
  * @returns {Object[]} Jogos com placares atualizados
  */
 async function _fetchScoresFromESPN(cachedGames) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10_000);
+  // Tenta ESPN com proxies se necessário
+  const attempts = [
+    ESPN_SCOREBOARD_URL,
+    ...CORS_PROXIES.map(proxy => proxy(ESPN_SCOREBOARD_URL))
+  ];
 
-  try {
-    const res = await fetch(ESPN_SCOREBOARD_URL, { mode: "cors", signal: controller.signal });
-    if (!res.ok) throw new Error(`ESPN HTTP ${res.status}`);
-    const data = await res.json();
+  let data = null;
+  for (const url of attempts) {
+    try {
+      const res = await _fetchWithTimeout(url, 5000);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      data = await res.json();
+      break;
+    } catch (err) {
+      console.warn("[api] ESPN tentativa falhou:", err.message);
+    }
+  }
+
+  if (!data) throw new Error("ESPN indisponível");
 
     // Monta lookup: "homename__awayname" → game object (referência)
     const lookup = new Map();
@@ -76,11 +97,8 @@ async function _fetchScoresFromESPN(cachedGames) {
       if (inProgress) cached._live = true;
     }
 
-    console.info("[api] Placares atualizados via ESPN (fallback).");
-    return cachedGames;
-  } finally {
-    clearTimeout(timeoutId);
-  }
+  console.info("[api] Placares atualizados via ESPN (fallback).");
+  return cachedGames;
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -88,38 +106,69 @@ async function _fetchScoresFromESPN(cachedGames) {
    ───────────────────────────────────────────────────────── */
 
 /**
- * Busca um endpoint com suporte a cache de 5 min.
+ * Tenta buscar de uma URL com timeout reduzido.
+ * @param {string} url
+ * @param {number} timeout em ms
+ * @returns {Promise<Response>}
+ */
+async function _fetchWithTimeout(url, timeout = 5000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  try {
+    return await fetch(url, { mode: "cors", signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+/**
+ * Busca um endpoint com retry automático usando proxies CORS.
  * @param {string} path       Ex.: "/get/games"
  * @param {boolean} skipCache Forçar nova requisição
  */
 async function fetchEndpoint(path, skipCache = false) {
   const cacheKey = path.replace(/\//g, "_").replace(/^_/, "");
 
+  // Usa cache se disponível e não for skipCache
   if (!skipCache) {
     const cached = loadCache(cacheKey);
-    if (cached !== null) return cached;
-  }
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10_000);
-
-  try {
-    const res = await fetch(`${BASE_URL}${path}`, { mode: "cors", signal: controller.signal });
-    if (!res.ok) throw new Error(`HTTP ${res.status} – ${path}`);
-    const data = await res.json();
-    saveCache(cacheKey, data);
-    return data;
-  } catch (err) {
-    // Fallback 1: usa cache expirado se existir
-    const stale = loadCacheStale(cacheKey);
-    if (stale !== null) {
-      console.warn(`[api] worldcup26.ir indisponível – usando cache expirado para ${path}:`, err.message);
-      return stale;
+    if (cached !== null) {
+      console.log(`[api] Usando cache para ${path}`);
+      return cached;
     }
-    throw err;
-  } finally {
-    clearTimeout(timeoutId);
   }
+
+  const fullUrl = `${BASE_URL}${path}`;
+  const attempts = [
+    () => _fetchWithTimeout(fullUrl, 5000),
+    ...CORS_PROXIES.map(proxy => () => _fetchWithTimeout(proxy(fullUrl), 6000))
+  ];
+
+  let lastError = null;
+
+  // Tenta cada URL sequencialmente
+  for (let i = 0; i < attempts.length; i++) {
+    try {
+      const res = await attempts[i]();
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      saveCache(cacheKey, data);
+      console.log(`[api] Sucesso via ${i === 0 ? 'direto' : `proxy ${i}`} para ${path}`);
+      return data;
+    } catch (err) {
+      lastError = err;
+      console.warn(`[api] Tentativa ${i + 1} falhou para ${path}:`, err.message);
+    }
+  }
+
+  // Todas as tentativas falharam – usa cache expirado
+  const stale = loadCacheStale(cacheKey);
+  if (stale !== null) {
+    console.warn(`[api] Todas as tentativas falharam – usando cache expirado para ${path}`);
+    return stale;
+  }
+  
+  throw lastError || new Error(`Falha ao buscar ${path}`);
 }
 
 /* ─────────────────────────────────────────────────────────

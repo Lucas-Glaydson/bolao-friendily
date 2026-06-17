@@ -95,8 +95,12 @@ async function _loadAPIData(skipCache = false) {
 
   elLoading.classList.remove("hidden");
   elError.classList.add("hidden");
+  
+  // Mostra feedback de carregamento
+  elStatus.textContent = "🔄 Atualizando...";
 
   try {
+    // Carrega em paralelo para máxima velocidade
     const [games, teamsMap, stadiumsMap] = await Promise.all([
       fetchGames(skipCache),
       fetchTeams(),
@@ -108,13 +112,16 @@ async function _loadAPIData(skipCache = false) {
     state.stadiumsMap = stadiumsMap;
     _enrichGamesUtcMs(state.games);
 
-    elStatus.textContent = `✅ ${new Date().toLocaleTimeString("pt-BR")}`;
+    const time = new Date().toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' });
+    elStatus.textContent = `✅ ${time}`;
+    elStatus.title = `Última atualização: ${time}`;
     _populateDynamicFilters(state.games, state.teamsMap);
     _renderAll();
   } catch (err) {
     console.error("[app] Falha na API:", err);
     elError.classList.remove("hidden");
-    elStatus.textContent = "⚠️ API indisponível";
+    elStatus.textContent = "⚠️ Modo offline";
+    elStatus.title = "Usando dados em cache. Clique em 'Atualizar' para tentar novamente.";
 
     // Exibe dados em cache / overrides manuais (se houver)
     if (state.games.length > 0) _renderAll();
@@ -952,14 +959,24 @@ function _closeScoreModal() {
 
 function _scheduleAutoRefresh() {
   if (state.refreshTimer) clearInterval(state.refreshTimer);
-  state.refreshTimer = setInterval(async () => {
+  
+  const refresh = async () => {
     const now = new Date();
     const todayStr = now.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
-    const hasTodayGames = state.games.some((g) => {
+    
+    // Verifica se há jogos hoje e se algum está em andamento
+    const todayGames = state.games.filter((g) => {
       const ms = g._utcMs ?? parseGameDate(g.local_date)?.getTime() ?? null;
       return ms !== null && new Date(ms).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) === todayStr;
     });
-    if (!hasTodayGames) return;
+    
+    if (todayGames.length === 0) return; // Sem jogos hoje, não atualiza
+    
+    // Detecta jogos ao vivo (started mas não finished, ou flag _live)
+    const hasLiveGames = todayGames.some(g => 
+      g._live === true || (g.finished === "FALSE" && (g.home_score > 0 || g.away_score > 0))
+    );
+    
     try {
       const updated = await fetchGames(true);
       state.games = updated;
@@ -968,12 +985,18 @@ function _scheduleAutoRefresh() {
       _renderToday(games);
       atualizarCelulas(games, state.palpitesStore);
       atualizarTotais(games, state.palpitesStore);
-      document.getElementById("api-status").textContent =
-        `✅ ${new Date().toLocaleTimeString("pt-BR")}`;
+      
+      const time = new Date().toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' });
+      const statusEl = document.getElementById("api-status");
+      statusEl.textContent = hasLiveGames ? `🔴 AO VIVO • ${time}` : `✅ ${time}`;
+      statusEl.title = `Última atualização: ${time}`;
     } catch (err) {
       console.warn("[app] Auto-refresh falhou:", err);
     }
-  }, 30_000);
+  };
+  
+  // Atualiza a cada 30 segundos (com cache de 3min, isso economiza requisições)
+  state.refreshTimer = setInterval(refresh, 30_000);
 }
 
 /* ─────────────────────────────────────────────────────────

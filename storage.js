@@ -4,7 +4,7 @@
 
 const PALPITES_KEY = "bolao_palpites_v1";
 const CACHE_PREFIX = "bolao_cache_v2_";   // v2: corrects MM/DD date format
-const CACHE_TTL = 30 * 1000; // 30 segundos
+const CACHE_TTL = 3 * 60 * 1000; // 3 minutos (180 segundos)
 
 /* ─────────────────────────────────────────────────────────
    PALPITES
