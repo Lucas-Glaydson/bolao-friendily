@@ -448,7 +448,8 @@ export function renderPessoasCards(
 
   const filteredAmigos = filters.person ? AMIGOS.filter(a => a === filters.person) : AMIGOS;
 
-  const container = document.getElementById("bolao-tables");
+  const container = document.getElementById("pessoa-cards-container");
+  if (!container) return;
   container.innerHTML = "";
 
   // Totais globais para ranking
@@ -592,7 +593,6 @@ export function renderPessoasCards(
   }
 
   container.appendChild(grid);
-  _renderFooter(allGames, palpitesStore);
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -645,6 +645,10 @@ export function renderRankingPersonTables(
       <span class="person-total-pts">${totalPts} pts</span>
     `;
     personSection.appendChild(header);
+
+    // Container com scroll para os grupos
+    const contentWrapper = document.createElement("div");
+    contentWrapper.className = "person-content";
 
     // Agrupa jogos por critério selecionado
     const groups = _groupGames(allGames, groupBy, teamsMap);
@@ -822,9 +826,10 @@ export function renderRankingPersonTables(
 
       scrollWrap.appendChild(table);
       groupDiv.appendChild(scrollWrap);
-      personSection.appendChild(groupDiv);
+      contentWrapper.appendChild(groupDiv);
     }
 
+    personSection.appendChild(contentWrapper);
     container.appendChild(personSection);
   }
 }
