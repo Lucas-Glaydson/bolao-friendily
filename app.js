@@ -664,6 +664,42 @@ function _setupEventListeners() {
   // ── Tentar novamente ──
   document.getElementById("btn-retry").addEventListener("click", () => _loadAPIData(true));
 
+  // ── Forçar atualização ──
+  document.getElementById("btn-force-refresh").addEventListener("click", async () => {
+    const btn = document.getElementById("btn-force-refresh");
+    const statusEl = document.getElementById("api-status");
+    
+    btn.disabled = true;
+    btn.textContent = "🔄 Atualizando...";
+    statusEl.textContent = "🔄 Atualizando placares...";
+    
+    console.log("🔄 [app] ATUALIZAÇÃO MANUAL FORÇADA pelo usuário");
+    
+    try {
+      const updated = await fetchGames(true);
+      state.games = updated;
+      _enrichGamesUtcMs(state.games);
+      const games = _gamesWithOverrides();
+      
+      calculateRankingCached(games, state.palpitesStore);
+      _renderToday(games);
+      atualizarCelulas(games, state.palpitesStore);
+      atualizarTotais(games, state.palpitesStore, state);
+      
+      const time = new Date().toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' });
+      statusEl.textContent = `✅ ${time}`;
+      statusEl.title = `Última atualização: ${time}`;
+      
+      console.log("✅ [app] Atualização manual concluída com sucesso");
+    } catch (err) {
+      console.error("❌ [app] Erro na atualização manual:", err);
+      statusEl.textContent = "⚠️ Erro na atualização";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "🔄 Atualizar";
+    }
+  });
+
   // ── Filtros do calendário ──
   document.getElementById("cal-filter-bar")?.addEventListener("click", (e) => {
     const btn = e.target.closest(".cal-filter-btn");
@@ -1033,11 +1069,11 @@ function _scheduleAutoRefresh() {
       g._live === true || (g.finished === "FALSE" && (g.home_score > 0 || g.away_score > 0))
     );
 
-    console.log(`[app] Auto-refresh: ${todayGames.length} jogos hoje, ${hasLiveGames ? 'AO VIVO detectado' : 'nenhum ao vivo'}`);
+    console.log(`[app] 🔄 Auto-refresh: ${todayGames.length} jogos hoje, ${hasLiveGames ? '🔴 AO VIVO detectado' : '⏳ nenhum ao vivo'}`);
 
     try {
-      // Força skipCache=true quando há jogos ao vivo
-      const updated = await fetchGames(hasLiveGames);
+      // SEMPRE força skipCache=true para garantir atualizações
+      const updated = await fetchGames(true);
       state.games = updated;
       _enrichGamesUtcMs(state.games);
       const games = _gamesWithOverrides();

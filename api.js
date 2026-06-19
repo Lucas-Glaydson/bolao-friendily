@@ -76,7 +76,7 @@ function _normalizeTeamName(name = "") {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]/g, "")
     .trim();
-  
+
   // Aplica aliases se disponível
   return TEAM_NAME_ALIASES[normalized] || normalized;
 }
@@ -108,46 +108,50 @@ async function _fetchScoresFromESPN(cachedGames) {
 
   if (!data) throw new Error("ESPN indisponível");
 
-    // Monta lookup: "homename__awayname" → game object (referência)
-    const lookup = new Map();
-    for (const g of cachedGames) {
-      const key = `${_normalizeTeamName(g.home_team_name_en)}__${_normalizeTeamName(g.away_team_name_en)}`;
-      lookup.set(key, g);
-      console.debug(`[api] Lookup key: ${key}`);
+  console.log(`[api] 🏈 ESPN retornou ${data.events?.length ?? 0} eventos`);
+
+  // Monta lookup: "homename__awayname" → game object (referência)
+  const lookup = new Map();
+  for (const g of cachedGames) {
+    const homeNorm = _normalizeTeamName(g.home_team_name_en);
+    const awayNorm = _normalizeTeamName(g.away_team_name_en);
+    const key = `${homeNorm}__${awayNorm}`;
+    lookup.set(key, g);
+    console.log(`[api] 📊 Cache: ${g.home_team_name_en} (${homeNorm}) vs ${g.away_team_name_en} (${awayNorm}) -> ${key}`);
+  }
+
+  let updatedCount = 0;
+  for (const event of (data.events ?? [])) {
+    const comp = event.competitions?.[0];
+    if (!comp) continue;
+
+    const home = comp.competitors?.find((c) => c.homeAway === "home");
+    const away = comp.competitors?.find((c) => c.homeAway === "away");
+    if (!home || !away) continue;
+
+    const homeDisplayName = home.team?.displayName ?? "";
+    const awayDisplayName = away.team?.displayName ?? "";
+    const key = `${_normalizeTeamName(homeDisplayName)}__${_normalizeTeamName(awayDisplayName)}`;
+
+    console.debug(`[api] ESPN event: ${homeDisplayName} vs ${awayDisplayName} -> key: ${key}`);
+
+    const cached = lookup.get(key);
+    if (!cached) {
+      console.warn(`[api] Match não encontrado no cache: ${homeDisplayName} vs ${awayDisplayName}`);
+      continue;
     }
 
-    let updatedCount = 0;
-    for (const event of (data.events ?? [])) {
-      const comp = event.competitions?.[0];
-      if (!comp) continue;
+    const finished = comp.status?.type?.completed ?? false;
+    const inProgress = comp.status?.type?.state === "in";
 
-      const home = comp.competitors?.find((c) => c.homeAway === "home");
-      const away = comp.competitors?.find((c) => c.homeAway === "away");
-      if (!home || !away) continue;
+    cached.home_score = parseInt(home.score ?? "0") || 0;
+    cached.away_score = parseInt(away.score ?? "0") || 0;
+    cached.finished = finished ? "TRUE" : "FALSE";
+    if (inProgress) cached._live = true;
 
-      const homeDisplayName = home.team?.displayName ?? "";
-      const awayDisplayName = away.team?.displayName ?? "";
-      const key = `${_normalizeTeamName(homeDisplayName)}__${_normalizeTeamName(awayDisplayName)}`;
-      
-      console.debug(`[api] ESPN event: ${homeDisplayName} vs ${awayDisplayName} -> key: ${key}`);
-      
-      const cached = lookup.get(key);
-      if (!cached) {
-        console.warn(`[api] Match não encontrado no cache: ${homeDisplayName} vs ${awayDisplayName}`);
-        continue;
-      }
-
-      const finished = comp.status?.type?.completed ?? false;
-      const inProgress = comp.status?.type?.state === "in";
-
-      cached.home_score = parseInt(home.score ?? "0") || 0;
-      cached.away_score = parseInt(away.score ?? "0") || 0;
-      cached.finished = finished ? "TRUE" : "FALSE";
-      if (inProgress) cached._live = true;
-      
-      updatedCount++;
-      console.log(`[api] ✓ Atualizado: ${homeDisplayName} ${cached.home_score}-${cached.away_score} ${awayDisplayName} (${finished ? 'FIM' : inProgress ? 'AO VIVO' : 'AGENDADO'})`);
-    }
+    updatedCount++;
+    console.log(`[api] ✓ Atualizado: ${homeDisplayName} ${cached.home_score}-${cached.away_score} ${awayDisplayName} (${finished ? 'FIM' : inProgress ? 'AO VIVO' : 'AGENDADO'})`);
+  }
 
   console.info(`[api] Placares atualizados via ESPN: ${updatedCount} jogos.`);
   return cachedGames;
@@ -219,7 +223,7 @@ async function fetchEndpoint(path, skipCache = false) {
     console.warn(`[api] Todas as tentativas falharam – usando cache expirado para ${path}`);
     return stale;
   }
-  
+
   throw lastError || new Error(`Falha ao buscar ${path}`);
 }
 
@@ -267,17 +271,26 @@ export async function fetchGames(skipCache = false) {
     const data = await fetchEndpoint("/get/games", skipCache);
     const arr = _toArray(data, "games", "data", "results");
     let games = arr.filter((g) => g.type === "group").map(_normalizeGame);
-    
+
     // Se skipCache=true, sempre tenta atualizar com ESPN para garantir placares ao vivo
     if (skipCache) {
-      console.log("[api] skipCache=true: tentando atualizar placares via ESPN...");
+      console.log("[api] 🔄 skipCache=true: tentando atualizar placares via ESPN...");
       try {
         games = await _fetchScoresFromESPN(games);
+        
+        // Log específico para USA x AUS
+        const usaAus = games.find(g => 
+          (g.home_team_name_en?.toLowerCase().includes('united states') || g.home_team_name_en?.toLowerCase().includes('usa')) &&
+          (g.away_team_name_en?.toLowerCase().includes('australia') || g.away_team_name_en?.toLowerCase().includes('aus'))
+        );
+        if (usaAus) {
+          console.log(`[api] 🇺🇸🇦🇺 USA x AUS após ESPN: ${usaAus.home_score}-${usaAus.away_score} (finished: ${usaAus.finished}, _live: ${usaAus._live})`);
+        }
       } catch (espnErr) {
-        console.warn("[api] Não foi possível atualizar via ESPN:", espnErr.message);
+        console.warn("[api] ❌ Não foi possível atualizar via ESPN:", espnErr.message);
       }
     }
-    
+
     return games;
   } catch (primaryErr) {
     // Fallback 2: ESPN API – obtém placares sobre os jogos do cache expirado
