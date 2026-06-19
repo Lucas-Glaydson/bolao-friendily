@@ -32,14 +32,53 @@ const ESPN_SCOREBOARD_URL =
 // API FIFA oficial (backup adicional)
 const FIFA_API_URL = "https://api.fifa.com/api/v3/calendar/matches";
 
+// Mapeamento de variações de nomes de times
+const TEAM_NAME_ALIASES = {
+  'united states': 'usa',
+  'unitedstates': 'usa',
+  'us': 'usa',
+  'australia': 'australia',
+  'aus': 'australia',
+  'brazil': 'brazil',
+  'brasil': 'brazil',
+  'england': 'england',
+  'ing': 'england',
+  'germany': 'germany',
+  'alemanha': 'germany',
+  'ger': 'germany',
+  'argentina': 'argentina',
+  'arg': 'argentina',
+  'france': 'france',
+  'franca': 'france',
+  'fra': 'france',
+  'spain': 'spain',
+  'espanha': 'spain',
+  'esp': 'spain',
+  'netherlands': 'netherlands',
+  'holanda': 'netherlands',
+  'ned': 'netherlands',
+  'portugal': 'portugal',
+  'por': 'portugal',
+  'italy': 'italy',
+  'italia': 'italy',
+  'ita': 'italy',
+  'mexico': 'mexico',
+  'mex': 'mexico',
+  'canada': 'canada',
+  'can': 'canada',
+};
+
 /** Normaliza nome de time para matching fuzzy (minúsculo, sem acentos, sem espaços extras). */
 function _normalizeTeamName(name = "") {
-  return name
+  let normalized = name
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]/g, " ")
+    .replace(/[^a-z0-9]/g, "")
     .trim();
+  
+  // Aplica aliases se disponível
+  return TEAM_NAME_ALIASES[normalized] || normalized;
 }
 
 /**
@@ -74,8 +113,10 @@ async function _fetchScoresFromESPN(cachedGames) {
     for (const g of cachedGames) {
       const key = `${_normalizeTeamName(g.home_team_name_en)}__${_normalizeTeamName(g.away_team_name_en)}`;
       lookup.set(key, g);
+      console.debug(`[api] Lookup key: ${key}`);
     }
 
+    let updatedCount = 0;
     for (const event of (data.events ?? [])) {
       const comp = event.competitions?.[0];
       if (!comp) continue;
@@ -84,9 +125,17 @@ async function _fetchScoresFromESPN(cachedGames) {
       const away = comp.competitors?.find((c) => c.homeAway === "away");
       if (!home || !away) continue;
 
-      const key = `${_normalizeTeamName(home.team?.displayName ?? "")}__${_normalizeTeamName(away.team?.displayName ?? "")}`;
+      const homeDisplayName = home.team?.displayName ?? "";
+      const awayDisplayName = away.team?.displayName ?? "";
+      const key = `${_normalizeTeamName(homeDisplayName)}__${_normalizeTeamName(awayDisplayName)}`;
+      
+      console.debug(`[api] ESPN event: ${homeDisplayName} vs ${awayDisplayName} -> key: ${key}`);
+      
       const cached = lookup.get(key);
-      if (!cached) continue;
+      if (!cached) {
+        console.warn(`[api] Match não encontrado no cache: ${homeDisplayName} vs ${awayDisplayName}`);
+        continue;
+      }
 
       const finished = comp.status?.type?.completed ?? false;
       const inProgress = comp.status?.type?.state === "in";
@@ -95,9 +144,12 @@ async function _fetchScoresFromESPN(cachedGames) {
       cached.away_score = parseInt(away.score ?? "0") || 0;
       cached.finished = finished ? "TRUE" : "FALSE";
       if (inProgress) cached._live = true;
+      
+      updatedCount++;
+      console.log(`[api] ✓ Atualizado: ${homeDisplayName} ${cached.home_score}-${cached.away_score} ${awayDisplayName} (${finished ? 'FIM' : inProgress ? 'AO VIVO' : 'AGENDADO'})`);
     }
 
-  console.info("[api] Placares atualizados via ESPN (fallback).");
+  console.info(`[api] Placares atualizados via ESPN: ${updatedCount} jogos.`);
   return cachedGames;
 }
 
@@ -214,7 +266,19 @@ export async function fetchGames(skipCache = false) {
   try {
     const data = await fetchEndpoint("/get/games", skipCache);
     const arr = _toArray(data, "games", "data", "results");
-    return arr.filter((g) => g.type === "group").map(_normalizeGame);
+    let games = arr.filter((g) => g.type === "group").map(_normalizeGame);
+    
+    // Se skipCache=true, sempre tenta atualizar com ESPN para garantir placares ao vivo
+    if (skipCache) {
+      console.log("[api] skipCache=true: tentando atualizar placares via ESPN...");
+      try {
+        games = await _fetchScoresFromESPN(games);
+      } catch (espnErr) {
+        console.warn("[api] Não foi possível atualizar via ESPN:", espnErr.message);
+      }
+    }
+    
+    return games;
   } catch (primaryErr) {
     // Fallback 2: ESPN API – obtém placares sobre os jogos do cache expirado
     console.warn("[api] worldcup26.ir sem cache disponível – tentando ESPN:", primaryErr.message);
